@@ -1,55 +1,24 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-
-    auth: {
-        user: "hastingsfred4@gmail.com",
-        pass: "PUT_YOUR_NEW_APP_PASSWORD_HERE"
-    }
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
 });
 
-transporter.verify((error, success) => {
+export const sendEmail = async ({ to, subject, html }) => {
+  try {
+    await transporter.sendMail({
+      from: `"AMS System" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html
+    });
 
-    if (error) {
-
-        console.log("❌ SMTP VERIFY ERROR");
-        console.log(error);
-
-    } else {
-
-        console.log("✅ SMTP READY");
-
-    }
-
-});
-
-export const sendEmail = async (
-    to,
-    subject,
-    text
-) => {
-
-    try {
-
-        await transporter.sendMail({
-            from: "Inventory System <hastingsfred4@gmail.com>",
-            to,
-            subject,
-            text
-        });
-
-        console.log("📧 EMAIL SENT");
-
-    } catch (error) {
-
-        console.log("❌ SEND MAIL ERROR");
-        console.log(error);
-
-        throw error;
-
-    }
-
+    console.log("Email sent to:", to);
+  } catch (error) {
+    console.error("Email error:", error);
+  }
 };

@@ -1,21 +1,21 @@
 import Requisition from "../models/Requisition.js";
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
+import { sendEmail } from "../services/emailService.js";
 
-/*
-|--------------------------------------------------------------------------
-| CREATE REQUISITION
-|--------------------------------------------------------------------------
-| HOD creates a new requisition
+import {
+  getPrincipal,
+  getAccountsUsers
+} from "../utils/userHelpers.js";
+
+/* 
+========================================================
+CREATE REQUISITION (HOD)
+========================================================
 */
-
 export const createRequisition = async (req, res) => {
   try {
-    const {
-      department,
-      priority,
-      items
-    } = req.body;
+    const { department, priority, items } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({
@@ -27,17 +27,18 @@ export const createRequisition = async (req, res) => {
     let totalAmount = 0;
 
     const processedItems = items
-  .filter(item => item.name && item.quantity && item.unitPrice)
-  .map((item) => {
-    const total = item.quantity * item.unitPrice;
+      .filter(item => item.name && item.quantity && item.unitPrice)
+      .map(item => {
+        const total = item.quantity * item.unitPrice;
+        totalAmount += total;
 
-    totalAmount += total;
+        return {
+          ...item,
+          total,
+          status: "PENDING"
+        };
+      });
 
-    return {
-      ...item,
-      total
-    };
-  });
     const requisition = await Requisition.create({
       requisitionId: `REQ-${Date.now()}`,
       requestedBy: req.user.id,
@@ -47,59 +48,50 @@ export const createRequisition = async (req, res) => {
       totalAmount
     });
 
-    const populatedRequisition = await Requisition.findById(
-      requisition._id
-    ).populate(
-      "requestedBy",
-      "name email role department"
-    );
+    const populated = await Requisition.findById(requisition._id)
+      .populate("requestedBy", "name email role department");
 
-    /*
-    |--------------------------------------------------------------------------
-    | NOTIFY ADMINS
-    |--------------------------------------------------------------------------
-    */
+    const principal = await getPrincipal();
 
-    const admins = await User.find({
-      role: "ADMIN"
-    });
-
-    for (const admin of admins) {
+    if (principal) {
       await Notification.create({
-        user: admin._id,
-        title: "New Requisition",
-        message: `${req.user.name} submitted a requisition.`,
-        type: "REQUISITION_CREATED"
+        user: principal._id,
+        title: "New Requisition Submitted",
+        message: `${req.user.name} submitted a requisition for approval.`,
+        type: "REQUISITION_CREATED",
+        relatedId: requisition._id
+      });
+
+      await sendEmail({
+        to: principal.email,
+        subject: "New Requisition Submitted",
+        html: `
+          <h2>New Requisition</h2>
+          <p>${req.user.name} submitted a new requisition.</p>
+          <p>Please review it in the system.</p>
+        `
       });
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SOCKET EVENT
-    |--------------------------------------------------------------------------
-    */
-
     const io = req.app.get("io");
 
-if (io) {
-  io.emit("requisitionCreated", populatedRequisition);
-}
+    if (io && principal) {
+      io.emit("requisitionCreated", populated);
 
-    io.emit("requisitionCreated", populatedRequisition);
-
-    io.emit("notificationCreated", {
-      title: "New Requisition Submitted"
-    });
+      io.to(principal._id.toString()).emit("notificationCreated", {
+        title: "New Requisition",
+        message: "A new requisition needs your approval"
+      });
+    }
 
     return res.status(201).json({
       success: true,
       message: "Requisition created successfully",
-      requisition: populatedRequisition
+      requisition: populated
     });
 
   } catch (error) {
-    console.error(error);
-
+    console.error("CREATE ERROR:", error);
     return res.status(500).json({
       success: false,
       message: error.message
@@ -107,19 +99,17 @@ if (io) {
   }
 };
 
-/*
-|--------------------------------------------------------------------------
-| GET MY REQUISITIONS
-|--------------------------------------------------------------------------
-| HOD views their requisitions
+/* 
+========================================================
+HOD - GET MY REQUISITIONS
+========================================================
 */
-
 export const getMyRequisitions = async (req, res) => {
   try {
-
     const requisitions = await Requisition.find({
       requestedBy: req.user.id
     })
+      .populate("requestedBy", "name email department role")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -129,34 +119,23 @@ export const getMyRequisitions = async (req, res) => {
     });
 
   } catch (error) {
-
     return res.status(500).json({
       success: false,
       message: error.message
     });
-
   }
 };
 
-/*
-|--------------------------------------------------------------------------
-| GET ALL REQUISITIONS
-|--------------------------------------------------------------------------
-| Admin views all requisitions
+/* 
+========================================================
+PRINCIPAL / ADMIN - GET ALL REQUISITIONS
+========================================================
 */
-
 export const getAllRequisitions = async (req, res) => {
   try {
-
     const requisitions = await Requisition.find()
-      .populate(
-        "requestedBy",
-        "name email department role"
-      )
-      .populate(
-        "reviewedBy",
-        "name email"
-      )
+      .populate("requestedBy", "name email department role")
+      .populate("reviewedBy", "name email")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -166,33 +145,23 @@ export const getAllRequisitions = async (req, res) => {
     });
 
   } catch (error) {
-
     return res.status(500).json({
       success: false,
       message: error.message
     });
-
   }
 };
 
-/*
-|--------------------------------------------------------------------------
-| REVIEW REQUISITION
-|--------------------------------------------------------------------------
-| Admin approves/rejects items
+/* 
+========================================================
+REVIEW REQUISITION (PRINCIPAL)
+========================================================
 */
-
 export const reviewRequisition = async (req, res) => {
   try {
+    const { items, principalComment } = req.body;
 
-    const {
-      items,
-      principalComment
-    } = req.body;
-
-    const requisition = await Requisition.findById(
-      req.params.id
-    );
+    const requisition = await Requisition.findById(req.params.id);
 
     if (!requisition) {
       return res.status(404).json({
@@ -201,137 +170,134 @@ export const reviewRequisition = async (req, res) => {
       });
     }
 
-    let approvedItems = 0;
-    let rejectedItems = 0;
+    let approved = 0;
+    let rejected = 0;
 
     requisition.items.forEach((item) => {
-
-      const reviewedItem = items.find(
+      const review = items.find(
         (i) => i._id === item._id.toString()
       );
 
-      if (!reviewedItem) return;
+      if (!review) return;
 
-      item.approvedQuantity =
-        reviewedItem.approvedQuantity;
+      item.approvedQuantity = review.approvedQuantity;
+      item.status = review.status;
+      item.adminComment = review.adminComment || "";
 
-      item.status =
-        reviewedItem.status;
-
-      item.adminComment =
-        reviewedItem.adminComment || "";
-
-      if (
-        reviewedItem.status === "APPROVED"
-      ) {
-        approvedItems++;
-      }
-
-      if (
-        reviewedItem.status === "REJECTED"
-      ) {
-        rejectedItems++;
-      }
+      if (review.status === "APPROVED") approved++;
+      if (review.status === "REJECTED") rejected++;
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | DETERMINE OVERALL STATUS
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-      approvedItems === requisition.items.length
-    ) {
+    /* =========================
+       SET OVERALL STATUS
+    ========================= */
+    if (approved === requisition.items.length) {
       requisition.status = "APPROVED";
-    }
-    else if (
-      rejectedItems === requisition.items.length
-    ) {
+    } else if (rejected === requisition.items.length) {
       requisition.status = "REJECTED";
-    }
-    else {
+    } else {
       requisition.status = "PROCESSING";
     }
 
-    requisition.principalComment =
-      principalComment;
-
-    requisition.reviewedBy =
-      req.user.id;
-
-    requisition.reviewedAt =
-      new Date();
+    requisition.principalComment = principalComment;
+    requisition.reviewedBy = req.user.id;
+    requisition.reviewedAt = new Date();
 
     await requisition.save();
 
-    const updatedRequisition =
-      await Requisition.findById(
-        requisition._id
-      )
-        .populate(
-          "requestedBy",
-          "name email department"
-        )
-        .populate(
-          "reviewedBy",
-          "name email"
-        );
+    const updated = await Requisition.findById(requisition._id)
+      .populate("requestedBy", "name email department role")
+      .populate("reviewedBy", "name email");
 
-    /*
-    |--------------------------------------------------------------------------
-    | CREATE NOTIFICATION
-    |--------------------------------------------------------------------------
-    */
-
-    await Notification.create({
-      user: requisition.requestedBy,
-      title: "Requisition Reviewed",
-      message: `Your requisition has been ${requisition.status}`,
-      type:
-        requisition.status === "APPROVED"
-          ? "REQUISITION_APPROVED"
-          : "REQUISITION_REJECTED"
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | SOCKET EVENT
-    |--------------------------------------------------------------------------
-    */
+    const hod = await User.findById(requisition.requestedBy);
 
     const io = req.app.get("io");
 
-if (io) {
-  io.emit("requisitionCreated", populatedRequisition);
-}
+    /* =========================
+       1. NOTIFY HOD (DB + EMAIL + SOCKET)
+    ========================= */
+    if (hod) {
+      await Notification.create({
+        user: hod._id,
+        title: "Requisition Reviewed",
+        message: `Your requisition is ${requisition.status}`,
+        type:
+          requisition.status === "APPROVED"
+            ? "REQUISITION_APPROVED"
+            : "REQUISITION_REJECTED",
+        relatedId: requisition._id
+      });
 
-    io.emit(
-      "requisitionUpdated",
-      updatedRequisition
-    );
+      await sendEmail({
+        to: hod.email,
+        subject: `Requisition ${requisition.status}`,
+        html: `<p>Your requisition has been ${requisition.status}</p>`
+      });
 
-    io.to(
-      requisition.requestedBy.toString()
-    ).emit("notificationCreated", {
-      title: "Requisition Reviewed",
-      status: requisition.status
-    });
+      if (io) {
+        io.to(hod._id.toString()).emit("notificationCreated", {
+          title: "Requisition Reviewed",
+          message: `Your requisition is ${requisition.status}`
+        });
+      }
+    }
+
+    /* =========================
+       2. NOTIFY ACCOUNTS (FIXED PROPERLY)
+    ========================= */
+
+    if (requisition.status === "APPROVED") {
+      const accountsUsers = await User.find({ role: "Accounts" });
+
+      for (const acc of accountsUsers) {
+        // DB notification
+        await Notification.create({
+          user: acc._id,
+          title: "Funding Required",
+          message: `Requisition ${requisition.requisitionId} approved and awaiting funding`,
+          type: "REQUISITION_APPROVED",
+          relatedId: requisition._id
+        });
+
+        // EMAIL
+        await sendEmail({
+          to: acc.email,
+          subject: "Funding Required",
+          html: `
+            <h3>Approved Requisition</h3>
+            <p>Requisition <b>${requisition.requisitionId}</b> is awaiting funding.</p>
+          `
+        });
+
+        // SOCKET (IMPORTANT FIX)
+        if (io) {
+          io.to(acc._id.toString()).emit("notificationCreated", {
+            title: "Funding Required",
+            message: `Requisition ${requisition.requisitionId} needs funding`
+          });
+        }
+      }
+    }
+
+    /* =========================
+       GLOBAL UPDATE EVENT
+    ========================= */
+    if (io) {
+      io.emit("requisitionUpdated", updated);
+    }
 
     return res.status(200).json({
       success: true,
       message: "Requisition reviewed successfully",
-      requisition: updatedRequisition
+      requisition: updated
     });
 
   } catch (error) {
-
-    console.error(error);
+    console.error("REVIEW ERROR:", error);
 
     return res.status(500).json({
       success: false,
       message: error.message
     });
-
   }
 };

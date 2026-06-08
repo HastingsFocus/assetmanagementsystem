@@ -7,7 +7,7 @@ department:"ICT"
 },
 
 {
-email:"hodfinance@company.com",
+email:"hastingsfred4@gmail.com",
 role:"HOD",
 department:"Finance"
 },

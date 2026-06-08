@@ -97,27 +97,28 @@ const Sidebar = () => {
       )}
 
       {/* Notifications */}
-      {(user?.role === "HOD" ||
-        user?.role === "Principal" ||
-        user?.role === "Stores") && (
-        <>
-         
-
-          <Link
-            to="/notifications"
-            style={{
-              textDecoration: "none",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px"
-            }}
-          >
-            <span>Notifications</span>
-            <NotificationsBell />
-          </Link>
-        </>
-      )}
+{(
+  user?.role === "HOD" ||
+  user?.role === "Principal" ||
+  user?.role === "Stores" ||
+  user?.role === "Accounts"
+) && (
+  <>
+    <Link
+      to="/notifications"
+      style={{
+        textDecoration: "none",
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px"
+      }}
+    >
+      <span>Notifications</span>
+      <NotificationsBell />
+    </Link>
+  </>
+)}
     </div>
   );
 };
