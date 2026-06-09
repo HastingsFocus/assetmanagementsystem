@@ -196,7 +196,7 @@ export const reviewRequisition = async (req, res) => {
     } else if (rejected === requisition.items.length) {
       requisition.status = "REJECTED";
     } else {
-      requisition.status = "PROCESSING";
+      requisition.status= "UNDER_REVIEW";
     }
 
     requisition.principalComment = principalComment;

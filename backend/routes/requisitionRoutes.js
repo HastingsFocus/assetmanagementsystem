@@ -1,5 +1,4 @@
 import express from "express";
-
 import {
   createRequisition,
   getMyRequisitions,
@@ -8,7 +7,7 @@ import {
 } from "../controllers/requisitionController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
-import Requisition from "../models/Requisition.js"; // ✅ ADD THIS
+import Requisition from "../models/Requisition.js";
 
 const router = express.Router();
 
@@ -16,27 +15,31 @@ const router = express.Router();
 ========================================
 CREATE REQUISITION
 ========================================
+POST /api/requisitions
 */
 router.post("/", protect, createRequisition);
 
 /*
 ========================================
-MY REQUISITIONS
+GET ALL REQUISITIONS (ADMIN / PRINCIPAL)
 ========================================
+GET /api/requisitions
+*/
+router.get("/", protect, getAllRequisitions);
+
+/*
+========================================
+MY REQUISITIONS (HOD)
+========================================
+GET /api/requisitions/my
 */
 router.get("/my", protect, getMyRequisitions);
 
 /*
 ========================================
-ALL REQUISITIONS
+GET SINGLE REQUISITION
 ========================================
-*/
-router.get("/all", protect, getAllRequisitions);
-
-/*
-========================================
-GET SINGLE REQUISITION (FIXED)
-========================================
+GET /api/requisitions/:id
 */
 router.get("/:id", protect, async (req, res) => {
   try {
@@ -67,6 +70,8 @@ router.get("/:id", protect, async (req, res) => {
 /*
 ========================================
 REVIEW REQUISITION
+========================================
+PUT /api/requisitions/:id/review
 ========================================
 */
 router.put("/:id/review", protect, reviewRequisition);

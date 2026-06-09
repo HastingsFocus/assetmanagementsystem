@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "../layout/DashboardLayout";
-
 import { getAllRequisitions } from "../services/requisitionService";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
@@ -12,9 +11,9 @@ const PrincipalRequisitions = () => {
   const [loading, setLoading] = useState(false);
 
   /*
-  =========================================
-  FETCH REQUISITIONS (PRINCIPAL)
-  =========================================
+  ========================================
+  FETCH REQUISITIONS
+  ========================================
   */
   const fetchRequisitions = async () => {
     try {
@@ -23,19 +22,17 @@ const PrincipalRequisitions = () => {
       const res = await getAllRequisitions();
 
       setRequisitions(res.data.requisitions || []);
-
     } catch (error) {
       console.log("Error fetching requisitions:", error);
-
     } finally {
       setLoading(false);
     }
   };
 
   /*
-  =========================================
+  ========================================
   LOAD DATA
-  =========================================
+  ========================================
   */
   useEffect(() => {
     if (user?.role === "Principal") {
@@ -44,9 +41,9 @@ const PrincipalRequisitions = () => {
   }, [user]);
 
   /*
-  =========================================
-  STATUS COLOR
-  =========================================
+  ========================================
+  STATUS COLORS
+  ========================================
   */
   const getStatusColor = (status) => {
     switch (status) {
@@ -56,6 +53,8 @@ const PrincipalRequisitions = () => {
         return "green";
       case "REJECTED":
         return "red";
+      case "UNDER_REVIEW":
+        return "#ff9800";
       case "PROCESSING":
         return "blue";
       default:
@@ -64,17 +63,15 @@ const PrincipalRequisitions = () => {
   };
 
   /*
-  =========================================
+  ========================================
   UI
-  =========================================
+  ========================================
   */
   return (
     <DashboardLayout>
       <h1>Principal Requisitions Panel</h1>
 
-      <p>
-        Review and monitor all submitted requisitions
-      </p>
+      <p>Review and monitor all submitted requisitions</p>
 
       {loading && <p>Loading requisitions...</p>}
 
@@ -85,66 +82,131 @@ const PrincipalRequisitions = () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: "15px",
+          gridTemplateColumns:
+            "repeat(auto-fill, minmax(350px, 1fr))",
+          gap: "20px",
           marginTop: "20px"
         }}
       >
-        {requisitions.map((req) => (
-          <div
-            key={req._id}
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: "10px",
-              padding: "15px",
-              background: "#fff",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
-            }}
-          >
-            <h3>{req.requisitionId}</h3>
+        {requisitions.map((req) => {
+          const approvedAmount = req.items.reduce(
+            (total, item) => {
+              if (item.status === "APPROVED") {
+                return (
+                  total +
+                  ((item.approvedQuantity || 0) *
+                    (item.unitPrice || 0))
+                );
+              }
 
-            <p>
-              <b>Department:</b> {req.department}
-            </p>
+              return total;
+            },
+            0
+          );
 
-            <p>
-              <b>Requested By:</b>{" "}
-              {req.requestedBy?.name || "Unknown"}
-            </p>
+          
 
-            <p>
-              <b>Items:</b> {req.items?.length || 0}
-            </p>
+          return (
+            <div
+              key={req._id}
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "12px",
+                padding: "18px",
+                background: "#fff",
+                boxShadow:
+                  "0 2px 8px rgba(0,0,0,0.08)"
+              }}
+            >
+              <h3
+                style={{
+                  marginBottom: "15px",
+                  color: "#222"
+                }}
+              >
+                {req.requisitionId}
+              </h3>
 
-            <p>
-              <b>Total:</b> {req.totalAmount}
-            </p>
+              <p>
+                <strong>Department:</strong>{" "}
+                {req.department}
+              </p>
 
-            <p style={{ color: getStatusColor(req.status), fontWeight: "bold" }}>
-              {req.status}
-            </p>
+              <p>
+                <strong>Requested By:</strong>{" "}
+                {req.requestedBy?.name || "Unknown"}
+              </p>
 
-            <p style={{ fontSize: "12px", color: "#666" }}>
-              Priority: {req.priority}
-            </p>
+              <p>
+                <strong>Items:</strong>{" "}
+                {req.items?.length || 0}
+              </p>
 
-            <Link
-  to={`/principal/requisitions/${req._id}`}
-  style={{
-    display: "inline-block",
-    marginTop: "10px",
-    padding: "8px 12px",
-    cursor: "pointer",
-    background: "#222",
-    color: "white",
-    textDecoration: "none",
-    borderRadius: "5px"
-  }}
->
-  View Details
-</Link>
-          </div>
-        ))}
+              <div
+                style={{
+                  marginTop: "15px",
+                  marginBottom: "15px",
+                  padding: "12px",
+                  background: "#f8f9fa",
+                  borderRadius: "8px"
+                }}
+              >
+                <p>
+                  <strong>Requested Amount:</strong>
+                  <br />
+                  MWK{" "}
+                  {Number(
+                    req.totalAmount || 0
+                  ).toLocaleString()}
+                </p>
+
+                <p>
+                  <strong>Approved Amount:</strong>
+                  <br />
+                  MWK{" "}
+                  {approvedAmount.toLocaleString()}
+                </p>
+
+                
+              </div>
+
+              <p
+                style={{
+                  color: getStatusColor(req.status),
+                  fontWeight: "bold",
+                  fontSize: "15px"
+                }}
+              >
+                {req.status}
+              </p>
+
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#666"
+                }}
+              >
+                Priority: {req.priority}
+              </p>
+
+              <Link
+                to={`/principal/requisitions/${req._id}`}
+                style={{
+                  display: "inline-block",
+                  marginTop: "12px",
+                  padding: "10px 15px",
+                  background: "#222",
+                  color: "#fff",
+                  textDecoration: "none",
+                  borderRadius: "6px",
+                  fontWeight: "500"
+                }}
+              >
+                View Details
+              </Link>
+            </div>
+          );
+        })}
       </div>
     </DashboardLayout>
   );

@@ -25,6 +25,9 @@ import Payments from "../pages/Payments";
 import Users from "../pages/Users";
 import Unauthorized from "../pages/Unauthorized";
 import Notifications from "../pages/Notifications";
+import ReceiveGoodsPage from "../pages/inventory/ReceiveGoodsPage";
+import InventoryListPage from "../pages/inventory/InventoryListPage";
+import DepartmentInventory from "../pages/DepartmentInventory";
 
 /*
 ========================================
@@ -86,6 +89,16 @@ const AppRoutes = () => {
         }
       />
 
+      {/* 📦 DEPARTMENT INVENTORY (HOD) */}
+<Route
+  path="/department-inventory"
+  element={
+    <RoleRoute allowedRoles={["HOD"]}>
+      <DepartmentInventory />
+    </RoleRoute>
+  }
+/>
+
       {/* =========================
           PRINCIPAL ROUTES
       ========================= */}
@@ -118,6 +131,33 @@ const AppRoutes = () => {
           </RoleRoute>
         }
       />
+      /*
+========================================
+INVENTORY - RECEIVE GOODS (STORES ONLY)
+========================================
+*/
+<Route
+  path="/inventory/receive"
+  element={
+    <RoleRoute allowedRoles={["Stores"]}>
+      <ReceiveGoodsPage />
+    </RoleRoute>
+  }
+/>
+
+/*
+========================================
+INVENTORY - LIST VIEW
+========================================
+*/
+<Route
+  path="/inventory/list"
+  element={
+    <RoleRoute allowedRoles={["Stores", "Admin"]}>
+      <InventoryListPage />
+    </RoleRoute>
+  }
+/>
 
       {/* =========================
           PAYMENTS

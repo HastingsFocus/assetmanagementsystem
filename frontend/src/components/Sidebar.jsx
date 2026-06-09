@@ -24,19 +24,27 @@ const Sidebar = () => {
       <br />
 
       {/* HOD */}
-      {user?.role === "HOD" && (
-        <>
-          <Link to="/requisition">Create Requisition</Link>
+{user?.role === "HOD" && (
+  <>
+    <Link to="/requisition">Create Requisition</Link>
 
-          <br />
-          <br />
+    <br />
+    <br />
 
-          <Link to="/my-requisitions">My Requisitions</Link>
+    <Link to="/my-requisitions">My Requisitions</Link>
 
-          <br />
-          <br />
-        </>
-      )}
+    <br />
+    <br />
+
+    {/* NEW 🔥 */}
+    <Link to="/department-inventory">
+      📦 Department Inventory
+    </Link>
+
+    <br />
+    <br />
+  </>
+)}
 
       {/* Principal */}
       {user?.role === "Principal" && (
@@ -51,16 +59,30 @@ const Sidebar = () => {
       )}
 
       {/* Stores */}
-      {user?.role === "Stores" && (
-        <>
-          <Link to="/inventory">
-            Inventory Management
-          </Link>
+{user?.role === "Stores" && (
+  <>
+    <Link to="/inventory">
+      Inventory Dashboard
+    </Link>
 
-          <br />
-          <br />
-        </>
-      )}
+    <br />
+    <br />
+
+    <Link to="/inventory/receive">
+      📥 Receive Goods
+    </Link>
+
+    <br />
+    <br />
+
+    <Link to="/inventory/list">
+      📦 Inventory List
+    </Link>
+
+    <br />
+    <br />
+  </>
+)}
 
       {/* Accounts */}
       {user?.role === "Accounts" && (

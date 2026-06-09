@@ -112,7 +112,7 @@ const Requisition = () => {
               }
             />
 
-            <label>Unit Price</label>
+            <label>Price Per Item</label>
             <input
               type="number"
               value={item.unitPrice}

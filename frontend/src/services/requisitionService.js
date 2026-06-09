@@ -15,7 +15,7 @@ export const getMyRequisitions = () => {
 };
 
 export const getAllRequisitions = () => {
-  return API.get("/requisitions/all");
+  return API.get("/requisitions");
 };
 
 export const reviewRequisition = (id, data) => {
@@ -27,6 +27,6 @@ export const getRequisitionById = (id) => {
 };
 
 export const getApprovedRequisitions = async () => {
-  const response = await API.get("/requisitions/all");
+  const response = await API.get("/requisitions");
   return response.data;
 };

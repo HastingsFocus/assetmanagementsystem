@@ -38,6 +38,8 @@ import authRoutes from "./routes/authRoutes.js";
 import requisitionRoutes from "./routes/requisitionRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import accountsRoutes from "./routes/accountsRoutes.js";
+import inventoryRoutes from "./routes/inventoryRoutes.js";
+
 
 import { initSocket } from "./sockets/socket.js";
 
@@ -71,6 +73,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/requisitions", requisitionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/accounts", accountsRoutes);
+app.use("/api/inventory", inventoryRoutes);
 
 /*
 ==================================

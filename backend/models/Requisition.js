@@ -75,12 +75,12 @@ const requisitionSchema = new mongoose.Schema({
   status: {
   type: String,
   enum: [
-    "PENDING",     // Waiting for Principal
-    "APPROVED",    // Approved by Principal
-    "FUNDED",      // Accounts released funds
-    "PURCHASED",   // Items have been bought
-    "COMPLETED",   // Items received and assigned
-    "REJECTED"     // Rejected by Principal
+    "PENDING",
+    "UNDER_REVIEW",
+    "APPROVED",
+    "REJECTED",
+    "FUNDS_RELEASED",
+    "COMPLETED"
   ],
   default: "PENDING"
 },
