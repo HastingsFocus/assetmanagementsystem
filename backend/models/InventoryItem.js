@@ -38,6 +38,10 @@ const inventoryItemSchema = new mongoose.Schema(
   required: true,
   index: true
 },
+inventoryAdded: {
+  type: Boolean,
+  default: false,
+},
 
     sourceRequisition: {
       type: mongoose.Schema.Types.ObjectId,

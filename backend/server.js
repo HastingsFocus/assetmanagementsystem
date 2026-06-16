@@ -39,6 +39,9 @@ import requisitionRoutes from "./routes/requisitionRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import accountsRoutes from "./routes/accountsRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
+import assetHistoryRoutes from "./routes/assetHistoryRoutes.js";
+import assetRoutes from "./routes/assetRoutes.js";
+import assetConditionRequestRoutes from "./routes/assetConditionRequestRoutes.js";
 
 
 import { initSocket } from "./sockets/socket.js";
@@ -74,7 +77,9 @@ app.use("/api/requisitions", requisitionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/accounts", accountsRoutes);
 app.use("/api/inventory", inventoryRoutes);
-
+app.use("/api/asset-history", assetHistoryRoutes);
+app.use("/api/assets", assetRoutes);
+app.use( "/api/asset-condition-requests",assetConditionRequestRoutes);
 /*
 ==================================
 TEST ROUTE

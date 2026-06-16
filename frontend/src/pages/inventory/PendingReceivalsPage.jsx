@@ -1,39 +1,39 @@
 import { useEffect, useState } from "react";
 import API from "../../services/api";
-import { receiveGoods } from "../../services/inventoryService";
+import { receiveRequisitionAssets } from "../../services/assetService";
 import DashboardLayout from "../../layout/DashboardLayout";
 
-const ReceiveGoodsPage = () => {
+const PendingReceivalsPage = () => {
   const [requisitions, setRequisitions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   /*
   ==========================================
-  LOAD REQUISITIONS READY FOR RECEIVING
+  LOAD FUNDED REQUISITIONS
   ==========================================
   */
-  const fetchApprovedRequisitions = async () => {
+  const fetchPendingReceivals = async () => {
     try {
       setLoading(true);
 
       const res = await API.get("/requisitions");
 
-      const ready = (
-        res.data.requisitions || []
-      ).filter(
-        (r) => r.status === "FUNDS_RELEASED"
+      const pending = (res.data.requisitions || []).filter(
+        (req) =>
+          req.status === "FUNDS_RELEASED" &&
+          !req.inventoryAdded
       );
 
-      setRequisitions(ready);
+      setRequisitions(pending);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchApprovedRequisitions();
+    fetchPendingReceivals();
   }, []);
 
   /*
@@ -49,8 +49,7 @@ const ReceiveGoodsPage = () => {
       ) {
         return (
           sum +
-          item.approvedQuantity *
-            item.unitPrice
+          item.approvedQuantity * item.unitPrice
         );
       }
 
@@ -60,103 +59,133 @@ const ReceiveGoodsPage = () => {
 
   /*
   ==========================================
-  RECEIVE GOODS
+  RECEIVE REQUISITION ASSETS
   ==========================================
   */
-  const handleReceive = async (id) => {
+  const handleReceiveAssets = async (
+    requisitionId
+  ) => {
     try {
-      await receiveGoods(id);
+      const response =
+        await receiveRequisitionAssets(
+          requisitionId
+        );
 
       alert(
-        "Goods successfully added to inventory ✅"
+        response.message ||
+          "Assets created successfully"
       );
 
-      fetchApprovedRequisitions();
+      fetchPendingReceivals();
     } catch (error) {
-      console.log(error);
+      console.error(error);
 
       alert(
         error?.response?.data?.message ||
-          "Failed to receive goods"
+          "Failed to receive assets"
       );
     }
   };
 
   return (
     <DashboardLayout>
-      <div style={{ padding: "20px" }}>
-        <h2>
-          📦 Receive Goods (Stores Department)
-        </h2>
+      <div
+        style={{
+          padding: "24px",
+        }}
+      >
+        <h2>📦 Pending Asset Receivals</h2>
 
-        <p>
-          Receive approved and funded
-          requisitions into inventory.
+        <p
+          style={{
+            color: "#666",
+            marginBottom: "25px",
+          }}
+        >
+          Funded requisitions waiting to be
+          converted into individual assets.
         </p>
 
         {loading ? (
           <p>Loading requisitions...</p>
         ) : requisitions.length === 0 ? (
-          <p
+          <div
             style={{
-              marginTop: "20px",
-              color: "#666"
+              padding: "20px",
+              background: "#fff",
+              borderRadius: "10px",
+              border: "1px solid #ddd",
             }}
           >
-            No funded requisitions ready for
-            receiving 📭
-          </p>
+            <p
+              style={{
+                color: "#666",
+                margin: 0,
+              }}
+            >
+              No funded requisitions awaiting
+              receival 📭
+            </p>
+          </div>
         ) : (
           requisitions.map((req) => (
             <div
               key={req._id}
               style={{
-                border: "1px solid #ddd",
-                borderRadius: "10px",
-                padding: "20px",
-                marginTop: "20px",
                 background: "#fff",
+                border: "1px solid #ddd",
+                borderRadius: "12px",
+                padding: "20px",
+                marginBottom: "20px",
                 boxShadow:
-                  "0 2px 6px rgba(0,0,0,0.08)"
+                  "0 2px 8px rgba(0,0,0,0.08)",
               }}
             >
               <h3>{req.requisitionId}</h3>
 
-              <p>
-                <strong>Department:</strong>{" "}
-                {req.department}
-              </p>
+              <div
+                style={{
+                  marginTop: "10px",
+                }}
+              >
+                <p>
+                  <strong>
+                    Department:
+                  </strong>{" "}
+                  {req.department}
+                </p>
 
-              <p>
-                <strong>Status:</strong>{" "}
-                <span
-                  style={{
-                    color: "green",
-                    fontWeight: "bold"
-                  }}
-                >
-                  {req.status}
-                </span>
-              </p>
+                <p>
+                  <strong>Priority:</strong>{" "}
+                  {req.priority}
+                </p>
 
-              <p>
-                <strong>Priority:</strong>{" "}
-                {req.priority}
-              </p>
+                <p>
+                  <strong>Status:</strong>{" "}
+                  <span
+                    style={{
+                      color: "#28a745",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {req.status}
+                  </span>
+                </p>
 
-              <p>
-                <strong>
-                  Approved Total:
-                </strong>{" "}
-                MWK{" "}
-                {getApprovedTotal(
-                  req.items
-                ).toLocaleString()}
-              </p>
+                <p>
+                  <strong>
+                    Approved Total:
+                  </strong>{" "}
+                  MWK{" "}
+                  {getApprovedTotal(
+                    req.items
+                  ).toLocaleString()}
+                </p>
+              </div>
 
               <h4
                 style={{
-                  marginTop: "20px"
+                  marginTop: "20px",
                 }}
               >
                 Approved Items
@@ -164,7 +193,7 @@ const ReceiveGoodsPage = () => {
 
               <div
                 style={{
-                  overflowX: "auto"
+                  overflowX: "auto",
                 }}
               >
                 <table
@@ -172,14 +201,14 @@ const ReceiveGoodsPage = () => {
                     width: "100%",
                     borderCollapse:
                       "collapse",
-                    marginTop: "10px"
+                    marginTop: "10px",
                   }}
                 >
                   <thead>
                     <tr
                       style={{
                         background:
-                          "#f5f5f5"
+                          "#f5f5f5",
                       }}
                     >
                       <th style={tableHeader}>
@@ -238,8 +267,7 @@ const ReceiveGoodsPage = () => {
                           >
                             MWK{" "}
                             {Number(
-                              item.unitPrice ||
-                                0
+                              item.unitPrice
                             ).toLocaleString()}
                           </td>
 
@@ -260,24 +288,51 @@ const ReceiveGoodsPage = () => {
                 </table>
               </div>
 
+              <h4
+                style={{
+                  marginTop: "20px",
+                }}
+              >
+                Assets To Be Created
+              </h4>
+
+              <ul>
+                {req.items
+                  ?.filter(
+                    (item) =>
+                      item.status ===
+                        "APPROVED" &&
+                      item.approvedQuantity >
+                        0
+                  )
+                  .map((item) => (
+                    <li key={item._id}>
+                      {
+                        item.approvedQuantity
+                      }{" "}
+                      × {item.name}
+                    </li>
+                  ))}
+              </ul>
+
               <button
                 onClick={() =>
-                  handleReceive(req._id)
+                  handleReceiveAssets(
+                    req._id
+                  )
                 }
                 style={{
                   marginTop: "20px",
-                  padding:
-                    "10px 18px",
-                  background:
-                    "#28a745",
+                  background: "#28a745",
                   color: "#fff",
                   border: "none",
-                  borderRadius: "6px",
+                  padding: "12px 20px",
+                  borderRadius: "8px",
                   cursor: "pointer",
-                  fontWeight: "bold"
+                  fontWeight: "600",
                 }}
               >
-                Receive Goods
+                Receive Assets
               </button>
             </div>
           ))
@@ -290,12 +345,12 @@ const ReceiveGoodsPage = () => {
 const tableHeader = {
   border: "1px solid #ddd",
   padding: "10px",
-  textAlign: "left"
+  textAlign: "left",
 };
 
 const tableCell = {
   border: "1px solid #ddd",
-  padding: "10px"
+  padding: "10px",
 };
 
-export default ReceiveGoodsPage;
+export default PendingReceivalsPage;

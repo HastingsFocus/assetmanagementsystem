@@ -12,7 +12,7 @@ const Sidebar = () => {
         background: "#222",
         color: "white",
         minHeight: "100vh",
-        padding: "20px"
+        padding: "20px",
       }}
     >
       <h2>AMS</h2>
@@ -23,30 +23,41 @@ const Sidebar = () => {
       <br />
       <br />
 
-      {/* HOD */}
-{user?.role === "HOD" && (
-  <>
-    <Link to="/requisition">Create Requisition</Link>
+      {/* =========================
+          HOD
+      ========================= */}
+      {user?.role === "HOD" && (
+        <>
+          <Link to="/requisition">Create Requisition</Link>
 
-    <br />
-    <br />
+          <br />
+          <br />
 
-    <Link to="/my-requisitions">My Requisitions</Link>
+          <Link to="/my-requisitions">My Requisitions</Link>
 
-    <br />
-    <br />
+          <br />
+          <br />
 
-    {/* NEW 🔥 */}
-    <Link to="/department-inventory">
-      📦 Department Inventory
-    </Link>
+          {/* 🔥 NEW HOD ASSET PAGE */}
+          <Link to="/hod/assets">
+            📁 My Department Assets
+          </Link>
 
-    <br />
-    <br />
-  </>
-)}
+          <br />
+          <br />
 
-      {/* Principal */}
+          <Link to="/department-inventory">
+            📦 Department Inventory (Old View)
+          </Link>
+
+          <br />
+          <br />
+        </>
+      )}
+
+      {/* =========================
+          PRINCIPAL
+      ========================= */}
       {user?.role === "Principal" && (
         <>
           <Link to="/principal/requisitions">
@@ -58,33 +69,56 @@ const Sidebar = () => {
         </>
       )}
 
-      {/* Stores */}
-{user?.role === "Stores" && (
+      {user?.role === "Stores" && (
   <>
     <Link to="/inventory">
-      Inventory Dashboard
+      📊 Inventory Dashboard
     </Link>
 
     <br />
     <br />
 
-    <Link to="/inventory/receive">
-      📥 Receive Goods
+    <Link to="/inventory/pending-receivals">
+      📥 Pending Receivals
     </Link>
 
     <br />
     <br />
 
-    <Link to="/inventory/list">
-      📦 Inventory List
+    <Link to="/inventory/create-asset">
+      ➕ Create Assets
     </Link>
 
     <br />
     <br />
+
+    <Link to="/inventory/assets">
+      📦 Asset Register
+    </Link>
+
+    <br />
+    <br />
+
+    <Link to="/inventory/condition-requests">
+      🔄 Condition Requests
+    </Link>
+
+    <br />
+    <br />
+
+    <Link to="/inventory/archived-assets">
+      🗄️ Archived Assets
+    </Link>
+
+    <br />
+    <br />
+
   </>
 )}
 
-      {/* Accounts */}
+      {/* =========================
+          ACCOUNTS
+      ========================= */}
       {user?.role === "Accounts" && (
         <>
           <Link to="/payments">Payments</Link>
@@ -94,7 +128,9 @@ const Sidebar = () => {
         </>
       )}
 
-      {/* Admin */}
+      {/* =========================
+          ADMIN
+      ========================= */}
       {user?.role === "Admin" && (
         <>
           <Link to="/users">User Management</Link>
@@ -118,29 +154,31 @@ const Sidebar = () => {
         </>
       )}
 
-      {/* Notifications */}
-{(
-  user?.role === "HOD" ||
-  user?.role === "Principal" ||
-  user?.role === "Stores" ||
-  user?.role === "Accounts"
-) && (
-  <>
-    <Link
-      to="/notifications"
-      style={{
-        textDecoration: "none",
-        color: "white",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px"
-      }}
-    >
-      <span>Notifications</span>
-      <NotificationsBell />
-    </Link>
-  </>
-)}
+      {/* =========================
+          NOTIFICATIONS
+      ========================= */}
+      {(
+        user?.role === "HOD" ||
+        user?.role === "Principal" ||
+        user?.role === "Stores" ||
+        user?.role === "Accounts"
+      ) && (
+        <>
+          <Link
+            to="/notifications"
+            style={{
+              textDecoration: "none",
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span>Notifications</span>
+            <NotificationsBell />
+          </Link>
+        </>
+      )}
     </div>
   );
 };
