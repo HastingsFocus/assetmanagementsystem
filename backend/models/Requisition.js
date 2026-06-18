@@ -61,9 +61,10 @@ const requisitionSchema = new mongoose.Schema({
   },
 
   department: {
-    type: String,
-    required: true
-  },
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Department",
+  required: true,
+},
 
   items: [itemSchema],
 

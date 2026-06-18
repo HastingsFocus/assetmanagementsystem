@@ -110,10 +110,10 @@ const Payments = () => {
                 Requisition: {req.requisitionId}
               </h3>
 
-              <p>
-                <strong>Department:</strong>{" "}
-                {req.department}
-              </p>
+             <p>
+  <strong>Department:</strong>{" "}
+  {req.department?.name || "Unknown"}
+</p>
 
               <p>
                 <strong>Requested Amount:</strong>{" "}

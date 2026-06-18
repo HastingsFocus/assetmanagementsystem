@@ -32,9 +32,10 @@ const userSchema = new mongoose.Schema(
         },
 
         department: {
-            type: String,
-            default: null
-        },
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Department",
+  default: null,
+},
 
         resetPasswordToken: String,
 

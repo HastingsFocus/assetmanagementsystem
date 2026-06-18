@@ -24,6 +24,10 @@ const assetHistorySchema = new mongoose.Schema(
         "condition_change_requested",
         "condition_updated",
         "condition_request_rejected",
+
+        "transfer_requested",
+    "transfer_approved",
+    "transfer_rejected",
       ],
       required: true,
     },
@@ -35,12 +39,14 @@ const assetHistorySchema = new mongoose.Schema(
     },
 
     previousDepartment: {
-      type: String,
-      default: null,
-    },
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Department",
+  default: null,
+},
 
     newDepartment: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Department",
       default: null,
     },
 

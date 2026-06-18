@@ -33,10 +33,10 @@ const inventoryItemSchema = new mongoose.Schema(
       default: 0
     },
 
-    department: {
-  type: String,
+   department: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Department",
   required: true,
-  index: true
 },
 inventoryAdded: {
   type: Boolean,

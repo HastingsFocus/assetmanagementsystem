@@ -42,6 +42,9 @@ import inventoryRoutes from "./routes/inventoryRoutes.js";
 import assetHistoryRoutes from "./routes/assetHistoryRoutes.js";
 import assetRoutes from "./routes/assetRoutes.js";
 import assetConditionRequestRoutes from "./routes/assetConditionRequestRoutes.js";
+import assetTransferRoutes from "./routes/assetTransferRoutes.js";
+import departmentRoutes from "./routes/departmentRoutes.js";
+
 
 
 import { initSocket } from "./sockets/socket.js";
@@ -80,6 +83,8 @@ app.use("/api/inventory", inventoryRoutes);
 app.use("/api/asset-history", assetHistoryRoutes);
 app.use("/api/assets", assetRoutes);
 app.use( "/api/asset-condition-requests",assetConditionRequestRoutes);
+app.use("/api/asset-transfers", assetTransferRoutes);
+app.use("/api/departments", departmentRoutes);
 /*
 ==================================
 TEST ROUTE

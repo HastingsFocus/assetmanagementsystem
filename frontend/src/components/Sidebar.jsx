@@ -17,28 +17,42 @@ const Sidebar = () => {
     >
       <h2>AMS</h2>
 
-      {/* Dashboard */}
-      <Link to="/dashboard">Dashboard</Link>
+
+      {/* =========================
+          DASHBOARD
+      ========================= */}
+
+      <Link to="/dashboard">
+        Dashboard
+      </Link>
+
 
       <br />
       <br />
+
 
       {/* =========================
           HOD
       ========================= */}
+
       {user?.role === "HOD" && (
         <>
-          <Link to="/requisition">Create Requisition</Link>
+          <Link to="/requisition">
+            Create Requisition
+          </Link>
 
           <br />
           <br />
 
-          <Link to="/my-requisitions">My Requisitions</Link>
+
+          <Link to="/my-requisitions">
+            My Requisitions
+          </Link>
 
           <br />
           <br />
 
-          {/* 🔥 NEW HOD ASSET PAGE */}
+
           <Link to="/hod/assets">
             📁 My Department Assets
           </Link>
@@ -46,141 +60,248 @@ const Sidebar = () => {
           <br />
           <br />
 
+
           <Link to="/department-inventory">
-            📦 Department Inventory (Old View)
+            📦 Department Inventory
           </Link>
 
           <br />
           <br />
+
+
+          {/* =========================
+              ASSET TRANSFERS
+          ========================= */}
+
+          <Link to="/asset-transfer-request">
+            🔄 Request Asset Transfer
+          </Link>
+
+          <br />
+          <br />
+
+
+          <Link to="/my-transfer-requests">
+            📋 My Transfer Requests
+          </Link>
+
+
+          <br />
+          <br />
+
         </>
       )}
+
+
 
       {/* =========================
           PRINCIPAL
       ========================= */}
+
       {user?.role === "Principal" && (
         <>
           <Link to="/principal/requisitions">
             View Requisitions
           </Link>
 
+
           <br />
           <br />
+
         </>
       )}
 
+
+
+
+      {/* =========================
+          STORES
+      ========================= */}
+
       {user?.role === "Stores" && (
-  <>
-    <Link to="/inventory">
-      📊 Inventory Dashboard
-    </Link>
+        <>
+          <Link to="/inventory">
+            📊 Inventory Dashboard
+          </Link>
 
-    <br />
-    <br />
 
-    <Link to="/inventory/pending-receivals">
-      📥 Pending Receivals
-    </Link>
+          <br />
+          <br />
 
-    <br />
-    <br />
 
-    <Link to="/inventory/create-asset">
-      ➕ Create Assets
-    </Link>
+          <Link to="/inventory/pending-receivals">
+            📥 Pending Receivals
+          </Link>
 
-    <br />
-    <br />
 
-    <Link to="/inventory/assets">
-      📦 Asset Register
-    </Link>
+          <br />
+          <br />
 
-    <br />
-    <br />
 
-    <Link to="/inventory/condition-requests">
-      🔄 Condition Requests
-    </Link>
+          <Link to="/inventory/create-asset">
+            ➕ Create Assets
+          </Link>
 
-    <br />
-    <br />
 
-    <Link to="/inventory/archived-assets">
-      🗄️ Archived Assets
-    </Link>
+          <br />
+          <br />
 
-    <br />
-    <br />
 
-  </>
-)}
+          <Link to="/inventory/assets">
+            📦 Asset Register
+          </Link>
+
+
+          <br />
+          <br />
+
+
+          <Link to="/inventory/condition-requests">
+            🔄 Condition Requests
+          </Link>
+
+
+          <br />
+          <br />
+
+
+          <Link to="/inventory/archived-assets">
+            🗄️ Archived Assets
+          </Link>
+
+
+          <br />
+          <br />
+
+
+
+          {/* =========================
+              TRANSFERS
+          ========================= */}
+
+
+          <Link to="/stores/pending-transfers">
+            🚚 Pending Transfers
+          </Link>
+
+
+          <br />
+          <br />
+
+        </>
+      )}
+
+
+
+
+
 
       {/* =========================
           ACCOUNTS
       ========================= */}
+
       {user?.role === "Accounts" && (
         <>
-          <Link to="/payments">Payments</Link>
+          <Link to="/payments">
+            Payments
+          </Link>
+
 
           <br />
           <br />
+
         </>
       )}
+
+
+
+
+
 
       {/* =========================
           ADMIN
       ========================= */}
+
       {user?.role === "Admin" && (
         <>
-          <Link to="/users">User Management</Link>
+          <Link to="/users">
+            User Management
+          </Link>
+
 
           <br />
           <br />
+
 
           <Link to="/inventory">
             Inventory Control
           </Link>
 
+
           <br />
           <br />
+
 
           <Link to="/payments">
             Payments Control
           </Link>
 
+
           <br />
           <br />
+
         </>
       )}
+
+
+
+
+
+
 
       {/* =========================
           NOTIFICATIONS
       ========================= */}
-      {(
-        user?.role === "HOD" ||
-        user?.role === "Principal" ||
-        user?.role === "Stores" ||
-        user?.role === "Accounts"
-      ) && (
-        <>
-          <Link
-            to="/notifications"
-            style={{
-              textDecoration: "none",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <span>Notifications</span>
-            <NotificationsBell />
-          </Link>
-        </>
-      )}
+
+
+      {
+        (
+          user?.role === "HOD" ||
+          user?.role === "Principal" ||
+          user?.role === "Stores" ||
+          user?.role === "Accounts"
+        )
+        &&
+        (
+          <>
+            <Link
+              to="/notifications"
+              style={{
+                textDecoration:"none",
+                color:"white",
+                display:"flex",
+                alignItems:"center",
+                gap:"8px"
+              }}
+            >
+
+              <span>
+                Notifications
+              </span>
+
+
+              <NotificationsBell />
+
+            </Link>
+
+          </>
+        )
+      }
+
+
     </div>
   );
 };
+
 
 export default Sidebar;

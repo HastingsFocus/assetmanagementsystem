@@ -149,11 +149,9 @@ const PendingReceivalsPage = () => {
                 }}
               >
                 <p>
-                  <strong>
-                    Department:
-                  </strong>{" "}
-                  {req.department}
-                </p>
+  <strong>Department:</strong>{" "}
+  {req.department?.name || "Unknown"}
+</p>
 
                 <p>
                   <strong>Priority:</strong>{" "}

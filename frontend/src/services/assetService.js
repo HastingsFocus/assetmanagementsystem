@@ -69,6 +69,29 @@ export const getArchivedAssets = async () => {
   const res = await API.get(
     "/assets/archived"
   );
-
   return res.data;
+};
+
+export const createTransferRequest = async (payload) => {
+    const res = await API.post("/asset-transfers", payload);
+    return res.data;
+};
+export const getMyTransferRequests = async () => {
+    const res = await API.get("/asset-transfers/my");
+    return res.data;
+};
+
+export const getPendingTransferRequests = async () => {
+    const res = await API.get("/asset-transfers/pending");
+    return res.data;
+};
+
+export const approveTransferRequest = async (id) => {
+    const res = await API.put(`/asset-transfers/approve/${id}`);
+    return res.data;
+};
+
+export const rejectTransferRequest = async (id, data) => {
+    const res = await API.put(`/asset-transfers/reject/${id}`, data);
+    return res.data;
 };

@@ -6,7 +6,6 @@ import { Link } from "react-router-dom";
 
 const PrincipalRequisitions = () => {
   const { user } = useAuth();
-
   const [requisitions, setRequisitions] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -18,9 +17,7 @@ const PrincipalRequisitions = () => {
   const fetchRequisitions = async () => {
     try {
       setLoading(true);
-
       const res = await getAllRequisitions();
-
       setRequisitions(res.data.requisitions || []);
     } catch (error) {
       console.log("Error fetching requisitions:", error);
@@ -53,8 +50,6 @@ const PrincipalRequisitions = () => {
         return "green";
       case "REJECTED":
         return "red";
-      case "UNDER_REVIEW":
-        return "#ff9800";
       case "PROCESSING":
         return "blue";
       default:
@@ -62,15 +57,9 @@ const PrincipalRequisitions = () => {
     }
   };
 
-  /*
-  ========================================
-  UI
-  ========================================
-  */
   return (
     <DashboardLayout>
       <h1>Principal Requisitions Panel</h1>
-
       <p>Review and monitor all submitted requisitions</p>
 
       {loading && <p>Loading requisitions...</p>}
@@ -79,32 +68,19 @@ const PrincipalRequisitions = () => {
         <p>No requisitions found.</p>
       )}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fill, minmax(350px, 1fr))",
-          gap: "20px",
-          marginTop: "20px"
-        }}
-      >
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
+        gap: "20px",
+        marginTop: "20px"
+      }}>
         {requisitions.map((req) => {
-          const approvedAmount = req.items.reduce(
-            (total, item) => {
-              if (item.status === "APPROVED") {
-                return (
-                  total +
-                  ((item.approvedQuantity || 0) *
-                    (item.unitPrice || 0))
-                );
-              }
-
-              return total;
-            },
-            0
-          );
-
-          
+          const approvedAmount = req.items.reduce((total, item) => {
+            if (item.status === "APPROVED") {
+              return total + ((item.approvedQuantity || 0) * (item.unitPrice || 0));
+            }
+            return total;
+          }, 0);
 
           return (
             <div
@@ -114,22 +90,14 @@ const PrincipalRequisitions = () => {
                 borderRadius: "12px",
                 padding: "18px",
                 background: "#fff",
-                boxShadow:
-                  "0 2px 8px rgba(0,0,0,0.08)"
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
               }}
             >
-              <h3
-                style={{
-                  marginBottom: "15px",
-                  color: "#222"
-                }}
-              >
-                {req.requisitionId}
-              </h3>
+              <h3>{req.requisitionId}</h3>
 
               <p>
                 <strong>Department:</strong>{" "}
-                {req.department}
+                {req.department?.name || req.department?.code || "Unknown"}
               </p>
 
               <p>
@@ -142,50 +110,36 @@ const PrincipalRequisitions = () => {
                 {req.items?.length || 0}
               </p>
 
-              <div
-                style={{
-                  marginTop: "15px",
-                  marginBottom: "15px",
-                  padding: "12px",
-                  background: "#f8f9fa",
-                  borderRadius: "8px"
-                }}
-              >
+              <div style={{
+                marginTop: "15px",
+                padding: "12px",
+                background: "#f8f9fa",
+                borderRadius: "8px"
+              }}>
                 <p>
                   <strong>Requested Amount:</strong>
-                  <br />
-                  MWK{" "}
-                  {Number(
-                    req.totalAmount || 0
-                  ).toLocaleString()}
+                  <br/>
+                  MWK {Number(req.totalAmount || 0).toLocaleString()}
                 </p>
 
                 <p>
                   <strong>Approved Amount:</strong>
-                  <br />
-                  MWK{" "}
-                  {approvedAmount.toLocaleString()}
+                  <br/>
+                  MWK {approvedAmount.toLocaleString()}
                 </p>
-
-                
               </div>
 
-              <p
-                style={{
-                  color: getStatusColor(req.status),
-                  fontWeight: "bold",
-                  fontSize: "15px"
-                }}
-              >
+              <p style={{
+                color: getStatusColor(req.status),
+                fontWeight: "bold"
+              }}>
                 {req.status}
               </p>
 
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "#666"
-                }}
-              >
+              <p style={{
+                color: "#666",
+                fontSize: "13px"
+              }}>
                 Priority: {req.priority}
               </p>
 
@@ -198,8 +152,7 @@ const PrincipalRequisitions = () => {
                   background: "#222",
                   color: "#fff",
                   textDecoration: "none",
-                  borderRadius: "6px",
-                  fontWeight: "500"
+                  borderRadius: "6px"
                 }}
               >
                 View Details

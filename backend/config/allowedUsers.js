@@ -1,39 +1,33 @@
 export const allowedUsers = [
-
 {
-email:"hastingsfred4@gmail.com",
-role:"HOD",
-department:"ICT"
+    email:"hastingsfred4@gmail.com",
+    role:"HOD",
+    departmentCode:"ICT"
 },
 
 {
-email:"finance@company.com",
-role:"HOD",
-department:"Finance"
+    email:"finance@company.com",
+    role:"HOD",
+    departmentCode:"FIN"
 },
 
 {
-email:"principal@company.com",
-role:"Principal",
-department:null
+    email:"principal@company.com",
+    role:"Principal"
 },
 
 {
-email:"accounts@company.com",
-role:"Accounts",
-department:null
+    email:"accounts@company.com",
+    role:"Accounts"
 },
 
 {
-email:"stores@company.com",
-role:"Stores",
-department:null
+    email:"stores@company.com",
+    role:"Stores"
 },
 
 {
-email:"admin@company.com",
-role:"Admin",
-department:null
+    email:"admin@company.com",
+    role:"Admin"
 }
-
 ];
