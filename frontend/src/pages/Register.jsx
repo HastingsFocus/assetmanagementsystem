@@ -131,6 +131,7 @@ const Register = () => {
     } catch (error) {
         setError(
             error.response?.data?.message ||
+            error.message ||
             "Registration failed"
         );
     } finally {

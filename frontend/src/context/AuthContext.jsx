@@ -60,11 +60,9 @@ export const AuthProvider = ({ children }) => {
   ALLOWED USERS
   ========================================
   */
-  const getAllowedUser = (
-    email
-  ) => {
+  const getAllowedUser = (email) => {
     return allowedUsers.find(
-      (u) => u.email === email
+      (u) => u.email.toLowerCase() === email.toLowerCase()
     );
   };
 

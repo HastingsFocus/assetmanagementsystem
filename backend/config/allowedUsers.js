@@ -29,5 +29,11 @@ export const allowedUsers = [
 {
     email:"admin@company.com",
     role:"Admin"
+},
+
+{
+    email:"kitchen@stjoseph.ac.mw",
+    role:"HOD",
+    departmentCode:"KITCHEN"
 }
 ];
