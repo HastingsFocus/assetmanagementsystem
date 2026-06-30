@@ -1,19 +1,23 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import DashboardLayout from "../layout/DashboardLayout";
 import { getAllRequisitions } from "../services/requisitionService";
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router-dom";
+import {
+  PageHeader,
+  Card,
+  Button,
+  StatusBadge,
+  EmptyState,
+  Loader,
+} from "../components/ui";
+import { FiClipboard, FiArrowRight } from "react-icons/fi";
 
 const PrincipalRequisitions = () => {
   const { user } = useAuth();
   const [requisitions, setRequisitions] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  /*
-  ========================================
-  FETCH REQUISITIONS
-  ========================================
-  */
   const fetchRequisitions = async () => {
     try {
       setLoading(true);
@@ -26,141 +30,107 @@ const PrincipalRequisitions = () => {
     }
   };
 
-  /*
-  ========================================
-  LOAD DATA
-  ========================================
-  */
   useEffect(() => {
     if (user?.role === "Principal") {
       fetchRequisitions();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
-  /*
-  ========================================
-  STATUS COLORS
-  ========================================
-  */
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "PENDING":
-        return "orange";
-      case "APPROVED":
-        return "green";
-      case "REJECTED":
-        return "red";
-      case "PROCESSING":
-        return "blue";
-      default:
-        return "gray";
-    }
-  };
-
   return (
     <DashboardLayout>
-      <h1>Principal Requisitions Panel</h1>
-      <p>Review and monitor all submitted requisitions</p>
+      <PageHeader
+        icon={<FiClipboard />}
+        title="Requisitions"
+        subtitle="Review and monitor all submitted requisitions."
+      />
 
-      {loading && <p>Loading requisitions...</p>}
+      {loading ? (
+        <Loader label="Loading requisitions…" />
+      ) : requisitions.length === 0 ? (
+        <EmptyState
+          icon={<FiClipboard />}
+          title="No requisitions found"
+          message="Submitted requisitions awaiting your review will appear here."
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {requisitions.map((req) => {
+            const approvedAmount = req.items.reduce((total, item) => {
+              if (item.status === "APPROVED") {
+                return (
+                  total + (item.approvedQuantity || 0) * (item.unitPrice || 0)
+                );
+              }
+              return total;
+            }, 0);
 
-      {!loading && requisitions.length === 0 && (
-        <p>No requisitions found.</p>
+            return (
+              <Card key={req._id} className="flex flex-col">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3>{req.requisitionId}</h3>
+                    <p className="mt-0.5 text-sm text-ink-500">
+                      {req.department?.name ||
+                        req.department?.code ||
+                        "Unknown department"}
+                    </p>
+                  </div>
+                  <StatusBadge status={req.status} />
+                </div>
+
+                <dl className="mt-4 space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-ink-500">Requested by</dt>
+                    <dd className="font-medium text-ink-800">
+                      {req.requestedBy?.name || "Unknown"}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-ink-500">Items</dt>
+                    <dd className="font-medium text-ink-800">
+                      {req.items?.length || 0}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-ink-500">Priority</dt>
+                    <dd className="font-medium text-ink-800">{req.priority}</dd>
+                  </div>
+                </dl>
+
+                <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-ink-50 p-3 text-sm">
+                  <div>
+                    <p className="text-xs text-ink-400">Requested</p>
+                    <p className="font-semibold text-ink-900">
+                      MWK {Number(req.totalAmount || 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-ink-400">Approved</p>
+                    <p className="font-semibold text-emerald-600">
+                      MWK {approvedAmount.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-1">
+                  <Button
+                    as={Link}
+                    to={`/principal/requisitions/${req._id}`}
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                  >
+                    View details
+                    <FiArrowRight className="size-4" />
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
       )}
-
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
-        gap: "20px",
-        marginTop: "20px"
-      }}>
-        {requisitions.map((req) => {
-          const approvedAmount = req.items.reduce((total, item) => {
-            if (item.status === "APPROVED") {
-              return total + ((item.approvedQuantity || 0) * (item.unitPrice || 0));
-            }
-            return total;
-          }, 0);
-
-          return (
-            <div
-              key={req._id}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "12px",
-                padding: "18px",
-                background: "#fff",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
-              }}
-            >
-              <h3>{req.requisitionId}</h3>
-
-              <p>
-                <strong>Department:</strong>{" "}
-                {req.department?.name || req.department?.code || "Unknown"}
-              </p>
-
-              <p>
-                <strong>Requested By:</strong>{" "}
-                {req.requestedBy?.name || "Unknown"}
-              </p>
-
-              <p>
-                <strong>Items:</strong>{" "}
-                {req.items?.length || 0}
-              </p>
-
-              <div style={{
-                marginTop: "15px",
-                padding: "12px",
-                background: "#f8f9fa",
-                borderRadius: "8px"
-              }}>
-                <p>
-                  <strong>Requested Amount:</strong>
-                  <br/>
-                  MWK {Number(req.totalAmount || 0).toLocaleString()}
-                </p>
-
-                <p>
-                  <strong>Approved Amount:</strong>
-                  <br/>
-                  MWK {approvedAmount.toLocaleString()}
-                </p>
-              </div>
-
-              <p style={{
-                color: getStatusColor(req.status),
-                fontWeight: "bold"
-              }}>
-                {req.status}
-              </p>
-
-              <p style={{
-                color: "#666",
-                fontSize: "13px"
-              }}>
-                Priority: {req.priority}
-              </p>
-
-              <Link
-                to={`/principal/requisitions/${req._id}`}
-                style={{
-                  display: "inline-block",
-                  marginTop: "12px",
-                  padding: "10px 15px",
-                  background: "#222",
-                  color: "#fff",
-                  textDecoration: "none",
-                  borderRadius: "6px"
-                }}
-              >
-                View Details
-              </Link>
-            </div>
-          );
-        })}
-      </div>
     </DashboardLayout>
   );
 };

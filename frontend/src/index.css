@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+/*
+=====================================================================
+  DESIGN TOKENS
+  Single source of truth for the visual language of the app.
+  Exposed as Tailwind theme values (e.g. `bg-brand-600`, `text-ink-500`).
+=====================================================================
+*/
+@theme {
+  /* Brand — calm professional indigo/blue */
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #d9e6ff;
+  --color-brand-200: #bcd2ff;
+  --color-brand-300: #8eb4ff;
+  --color-brand-400: #598cff;
+  --color-brand-500: #3366ff;
+  --color-brand-600: #1f4ae0;
+  --color-brand-700: #1b3cb8;
+  --color-brand-800: #1c3593;
+  --color-brand-900: #1c3174;
+
+  /* Neutral ink scale for text, borders, surfaces */
+  --color-ink-50: #f8fafc;
+  --color-ink-100: #f1f5f9;
+  --color-ink-200: #e2e8f0;
+  --color-ink-300: #cbd5e1;
+  --color-ink-400: #94a3b8;
+  --color-ink-500: #64748b;
+  --color-ink-600: #475569;
+  --color-ink-700: #334155;
+  --color-ink-800: #1e293b;
+  --color-ink-900: #0f172a;
+
+  /* Fonts */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Radii & shadow */
+  --radius-card: 14px;
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+/*
+=====================================================================
+  BASE STYLES
+=====================================================================
+*/
+@layer base {
+  * {
+    @apply border-ink-200;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-ink-100 text-ink-800 antialiased;
+    font-family: var(--font-sans);
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  h1 {
+    @apply text-2xl font-bold tracking-tight text-ink-900;
+  }
+
+  h2 {
+    @apply text-xl font-semibold tracking-tight text-ink-900;
+  }
+
+  h3 {
+    @apply text-base font-semibold text-ink-800;
+  }
+
+  a {
+    @apply text-brand-600 transition-colors;
+  }
+
+  /* Visible, consistent keyboard focus everywhere */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+}
+
+/*
+=====================================================================
+  REUSABLE COMPONENT CLASSES
+  Keep markup clean across the many pages of the app.
+=====================================================================
+*/
+@layer components {
+  /* ---- Buttons ----
+     Use a base class plus a variant in markup, e.g. `btn btn-primary`. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5
+      text-sm font-semibold transition-colors
+      disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-brand-600 text-white hover:bg-brand-700;
+  }
+  .btn-secondary {
+    @apply border border-ink-300 bg-white text-ink-700 hover:bg-ink-50;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+  .btn-success {
+    @apply bg-emerald-600 text-white hover:bg-emerald-700;
+  }
+  .btn-ghost {
+    @apply text-ink-600 hover:bg-ink-100;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  /* ---- Surfaces ---- */
+  .card {
+    @apply rounded-[var(--radius-card)] border border-ink-200 bg-white
+      shadow-[var(--shadow-card)];
+  }
+  .card-body {
+    @apply p-5 sm:p-6;
+  }
+
+  /* ---- Form controls ---- */
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink-700;
+  }
+  .input,
+  .select,
+  .textarea {
+    @apply w-full rounded-lg border border-ink-300 bg-white px-3.5 py-2.5
+      text-sm text-ink-900 placeholder:text-ink-400 transition
+      focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30
+      focus:outline-none disabled:bg-ink-100 disabled:text-ink-500;
+  }
+  .textarea {
+    @apply min-h-[96px] resize-y;
+  }
+
+  /* ---- Badges ----
+     Use a base class plus a variant in markup, e.g. `badge badge-green`. */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5
+      text-xs font-medium;
+  }
+  .badge-gray {
+    @apply bg-ink-100 text-ink-700;
+  }
+  .badge-blue {
+    @apply bg-brand-50 text-brand-700;
+  }
+  .badge-green {
+    @apply bg-emerald-50 text-emerald-700;
+  }
+  .badge-amber {
+    @apply bg-amber-50 text-amber-700;
+  }
+  .badge-red {
+    @apply bg-red-50 text-red-700;
+  }
+
+  /* ---- Data tables ---- */
+  .table-wrap {
+    @apply w-full overflow-x-auto rounded-xl border border-ink-200 bg-white;
+  }
+  .data-table {
+    @apply w-full border-collapse text-left text-sm;
+  }
+  .data-table thead th {
+    @apply whitespace-nowrap border-b border-ink-200 bg-ink-50 px-4 py-3
+      text-xs font-semibold uppercase tracking-wide text-ink-500;
+  }
+  .data-table tbody td {
+    @apply border-b border-ink-100 px-4 py-3 align-middle text-ink-700;
+  }
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .data-table tbody tr:hover {
+    @apply bg-ink-50/70;
+  }
+}

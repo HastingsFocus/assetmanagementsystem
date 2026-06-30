@@ -1,136 +1,97 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "../layout/DashboardLayout";
 import { getMyTransferRequests } from "../services/assetService";
+import {
+  PageHeader,
+  Card,
+  StatusBadge,
+  EmptyState,
+  Loader,
+} from "../components/ui";
+import { FiList, FiArrowRight } from "react-icons/fi";
 
 const MyTransferRequests = () => {
-    const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    /*
-    ==========================================
-    LOAD MY REQUESTS
-    ==========================================
-    */
-    const loadRequests = async () => {
-        try {
-            const response = await getMyTransferRequests();
-            setRequests(response.requests || []);
-        } catch (error) {
-            console.log("Failed loading requests", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const loadRequests = async () => {
+    try {
+      const response = await getMyTransferRequests();
+      setRequests(response.requests || []);
+    } catch (error) {
+      console.log("Failed loading requests", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    useEffect(() => {
-        loadRequests();
-    }, []);
+  useEffect(() => {
+    loadRequests();
+  }, []);
 
-    /*
-    ==========================================
-    STATUS COLOR
-    ==========================================
-    */
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "APPROVED":
-                return "green";
-            case "REJECTED":
-                return "red";
-            case "PENDING":
-                return "orange";
-            default:
-                return "gray";
-        }
-    };
+  return (
+    <DashboardLayout>
+      <PageHeader
+        icon={<FiList />}
+        title="My Transfer Requests"
+        subtitle="Track the status of your requested asset transfers."
+      />
 
-    return (
-        <DashboardLayout>
-            <h1>My Asset Transfer Requests</h1>
-            <p style={{ color: "#666" }}>
-                Track the status of your requested asset transfers.
-            </p>
-
-            {loading ? (
-                <p>Loading requests...</p>
-            ) : requests.length === 0 ? (
-                <p>You have no transfer requests.</p>
-            ) : (
-                <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
-                    gap: "20px",
-                    marginTop: "20px"
-                }}>
-                    {requests.map((request) => (
-                        <div key={request._id} style={card}>
-                            <h3>{request.asset?.assetName}</h3>
-                            <p>
-                                <strong>Asset Tag:</strong>{" "}
-                                {request.asset?.assetTag}
-                            </p>
-                            <p>
-                                <strong>From:</strong>{" "}
-                                {request.fromDepartment?.name || "Unknown"}
-                            </p>
-                            <p>
-                                <strong>To:</strong>{" "}
-                                {request.toDepartment?.name || "Unknown"}
-                            </p>
-                            <div style={infoBox}>
-                                <strong>Reason:</strong>
-                                <p>{request.reason}</p>
-                            </div>
-                            <p>
-                                <strong>Status:</strong>{" "}
-                                <span style={{
-                                    color: getStatusColor(request.status),
-                                    fontWeight: "bold"
-                                }}>
-                                    {request.status}
-                                </span>
-                            </p>
-                            {request.status === "REJECTED" && (
-                                <div style={rejectBox}>
-                                    <strong>Rejection Reason:</strong>
-                                    <p>{request.rejectionReason || "No reason provided"}</p>
-                                </div>
-                            )}
-                            <p style={{
-                                fontSize: "13px",
-                                color: "#777"
-                            }}>
-                                Requested:{" "}
-                                {new Date(request.createdAt).toLocaleDateString()}
-                            </p>
-                        </div>
-                    ))}
+      {loading ? (
+        <Loader label="Loading requests…" />
+      ) : requests.length === 0 ? (
+        <EmptyState
+          icon={<FiList />}
+          title="No transfer requests"
+          message="Transfer requests you submit will be listed here."
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {requests.map((request) => (
+            <Card key={request._id} className="flex flex-col">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3>{request.asset?.assetName}</h3>
+                  <p className="mt-0.5 text-sm text-ink-500">
+                    {request.asset?.assetTag}
+                  </p>
                 </div>
-            )}
-        </DashboardLayout>
-    );
-};
+                <StatusBadge status={request.status} />
+              </div>
 
-const card = {
-    border: "1px solid #ddd",
-    borderRadius: "12px",
-    padding: "20px",
-    background: "#fff",
-    boxShadow: "0 3px 10px rgba(0,0,0,0.08)"
-};
+              <div className="mt-4 flex items-center gap-2 text-sm">
+                <span className="badge badge-gray">
+                  {request.fromDepartment?.name || "Unknown"}
+                </span>
+                <FiArrowRight className="size-4 text-ink-400" />
+                <span className="badge badge-blue">
+                  {request.toDepartment?.name || "Unknown"}
+                </span>
+              </div>
 
-const infoBox = {
-    background: "#f8f9fa",
-    padding: "12px",
-    borderRadius: "8px",
-    margin: "15px 0"
-};
+              <div className="mt-4 rounded-lg bg-ink-50 p-3 text-sm">
+                <p className="font-medium text-ink-700">Reason</p>
+                <p className="mt-1 text-ink-600">{request.reason}</p>
+              </div>
 
-const rejectBox = {
-    background: "#ffe6e6",
-    padding: "12px",
-    borderRadius: "8px",
-    marginTop: "15px"
+              {request.status === "REJECTED" ? (
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm">
+                  <p className="font-medium text-red-700">Rejection reason</p>
+                  <p className="mt-1 text-red-600">
+                    {request.rejectionReason || "No reason provided"}
+                  </p>
+                </div>
+              ) : null}
+
+              <p className="mt-4 text-xs text-ink-400">
+                Requested {new Date(request.createdAt).toLocaleDateString()}
+              </p>
+            </Card>
+          ))}
+        </div>
+      )}
+    </DashboardLayout>
+  );
 };
 
 export default MyTransferRequests;

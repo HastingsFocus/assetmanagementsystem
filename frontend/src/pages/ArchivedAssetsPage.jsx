@@ -2,6 +2,16 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../layout/DashboardLayout";
 import { getArchivedAssets } from "../services/assetService";
+import {
+  PageHeader,
+  Card,
+  Table,
+  Button,
+  StatusBadge,
+  EmptyState,
+  Loader,
+} from "../components/ui";
+import { FiArchive } from "react-icons/fi";
 
 const ArchivedAssetsPage = () => {
   const [assets, setAssets] = useState([]);
@@ -10,7 +20,6 @@ const ArchivedAssetsPage = () => {
   const loadAssets = async () => {
     try {
       const response = await getArchivedAssets();
-
       setAssets(response.assets || []);
     } catch (error) {
       console.error(error);
@@ -25,114 +34,63 @@ const ArchivedAssetsPage = () => {
 
   return (
     <DashboardLayout>
-      <div style={container}>
-        <h2>🗄️ Archived Assets</h2>
+      <PageHeader
+        icon={<FiArchive />}
+        title="Archived Assets"
+        subtitle="Assets that have been retired or disposed."
+      />
 
-        {loading ? (
-          <p>Loading archived assets...</p>
-        ) : assets.length === 0 ? (
-          <div style={card}>
-            No archived assets found.
-          </div>
-        ) : (
-          <div style={card}>
-            <table style={table}>
-              <thead>
-                <tr>
-                  <th style={header}>Asset Tag</th>
-                  <th style={header}>Asset Name</th>
-                  <th style={header}>Category</th>
-                  <th style={header}>Department</th>
-                  <th style={header}>Condition</th>
-                  <th style={header}>Status</th>
-                  <th style={header}>Action</th>
+      {loading ? (
+        <Loader label="Loading archived assets…" />
+      ) : assets.length === 0 ? (
+        <EmptyState
+          icon={<FiArchive />}
+          title="No archived assets"
+          message="Retired or disposed assets will appear here."
+        />
+      ) : (
+        <Card padded={false}>
+          <Table>
+            <thead>
+              <tr>
+                <th>Asset Tag</th>
+                <th>Asset Name</th>
+                <th>Category</th>
+                <th>Department</th>
+                <th>Condition</th>
+                <th>Status</th>
+                <th className="text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assets.map((asset) => (
+                <tr key={asset._id}>
+                  <td className="font-medium text-ink-900">{asset.assetTag}</td>
+                  <td>{asset.assetName}</td>
+                  <td>{asset.category}</td>
+                  <td>{asset.department?.name || asset.department || "-"}</td>
+                  <td>{asset.condition}</td>
+                  <td>
+                    <StatusBadge status={asset.status} />
+                  </td>
+                  <td className="text-right">
+                    <Button
+                      as={Link}
+                      to={`/inventory/assets/${asset._id}`}
+                      variant="secondary"
+                      size="sm"
+                    >
+                      View
+                    </Button>
+                  </td>
                 </tr>
-              </thead>
-
-              <tbody>
-                {assets.map((asset) => (
-                  <tr key={asset._id}>
-                    <td style={cell}>{asset.assetTag}</td>
-
-                    <td style={cell}>{asset.assetName}</td>
-
-                    <td style={cell}>{asset.category}</td>
-
-                    <td style={cell}>
-                      {asset.department}
-                    </td>
-
-                    <td style={cell}>
-                      {asset.condition}
-                    </td>
-
-                    <td style={cell}>
-                      <span style={statusBadge}>
-                        {asset.status}
-                      </span>
-                    </td>
-
-                    <td style={cell}>
-                      <Link
-                        to={`/inventory/assets/${asset._id}`}
-                        style={viewBtn}
-                      >
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              ))}
+            </tbody>
+          </Table>
+        </Card>
+      )}
     </DashboardLayout>
   );
-};
-
-const container = {
-  padding: "24px",
-};
-
-const card = {
-  background: "#fff",
-  padding: "20px",
-  borderRadius: "10px",
-  border: "1px solid #ddd",
-};
-
-const table = {
-  width: "100%",
-  borderCollapse: "collapse",
-};
-
-const header = {
-  padding: "12px",
-  border: "1px solid #ddd",
-  background: "#f5f5f5",
-  textAlign: "left",
-};
-
-const cell = {
-  padding: "10px",
-  border: "1px solid #ddd",
-};
-
-const statusBadge = {
-  background: "#dc3545",
-  color: "#fff",
-  padding: "5px 10px",
-  borderRadius: "5px",
-  fontSize: "12px",
-};
-
-const viewBtn = {
-  background: "#007bff",
-  color: "#fff",
-  padding: "6px 12px",
-  borderRadius: "5px",
-  textDecoration: "none",
 };
 
 export default ArchivedAssetsPage;

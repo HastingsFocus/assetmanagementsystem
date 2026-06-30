@@ -4,37 +4,29 @@ import {
   getNotifications,
   markNotificationRead,
 } from "../services/notificationService";
+import { PageHeader, Card, Button, EmptyState, Loader } from "../components/ui";
+import { FiBell, FiCheck } from "react-icons/fi";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
-
-  /*
-  ========================================
-  LOAD NOTIFICATIONS
-  ========================================
-  */
-  useEffect(() => {
-    loadNotifications();
-  }, []);
+  const [loading, setLoading] = useState(true);
 
   const loadNotifications = async () => {
     try {
       const data = await getNotifications();
-
-      // console.log("RAW DATA:", data);
-
       setNotifications(data.notifications || []);
     } catch (error) {
       console.error("Error loading notifications:", error);
       setNotifications([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  /*
-  ========================================
-  MARK AS READ
-  ========================================
-  */
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
   const handleRead = async (id) => {
     try {
       await markNotificationRead(id);
@@ -46,60 +38,61 @@ const Notifications = () => {
 
   return (
     <DashboardLayout>
-      <div>
-        <h2 style={{ marginBottom: "20px" }}>
-          Notifications
-        </h2>
+      <PageHeader
+        icon={<FiBell />}
+        title="Notifications"
+        subtitle="Updates about your requisitions, assets and transfers."
+      />
 
-        {notifications.length === 0 ? (
-          <p>No notifications yet</p>
-        ) : (
-          notifications.map((n) => (
-            <div
+      {loading ? (
+        <Loader label="Loading notifications…" />
+      ) : notifications.length === 0 ? (
+        <EmptyState
+          icon={<FiBell />}
+          title="You're all caught up"
+          message="You don't have any notifications yet."
+        />
+      ) : (
+        <div className="space-y-3">
+          {notifications.map((n) => (
+            <Card
               key={n._id}
-              style={{
-                border: "1px solid #ddd",
-                padding: "12px",
-                marginBottom: "10px",
-                borderRadius: "6px",
-                background: n.isRead
-                  ? "#fff"
-                  : "#f0f8ff",
-              }}
+              className={
+                n.isRead ? "" : "border-brand-200 bg-brand-50/40"
+              }
             >
-              <h4 style={{ marginBottom: "5px" }}>
-                {n.title}
-              </h4>
-
-              <p style={{ marginBottom: "5px" }}>
-                {n.message}
-              </p>
-
-              <small>
-                {new Date(
-                  n.createdAt
-                ).toLocaleString()}
-              </small>
-
-              {!n.isRead && (
-                <div style={{ marginTop: "10px" }}>
-                  <button
-                    onClick={() =>
-                      handleRead(n._id)
-                    }
-                    style={{
-                      padding: "5px 10px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Mark Read
-                  </button>
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    {!n.isRead ? (
+                      <span
+                        className="size-2 shrink-0 rounded-full bg-brand-600"
+                        aria-label="Unread"
+                      />
+                    ) : null}
+                    <h3 className="truncate">{n.title}</h3>
+                  </div>
+                  <p className="mt-1 text-sm text-ink-600">{n.message}</p>
+                  <time className="mt-2 block text-xs text-ink-400">
+                    {new Date(n.createdAt).toLocaleString()}
+                  </time>
                 </div>
-              )}
-            </div>
-          ))
-        )}
-      </div>
+
+                {!n.isRead ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleRead(n._id)}
+                  >
+                    <FiCheck className="size-4" />
+                    Mark read
+                  </Button>
+                ) : null}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </DashboardLayout>
   );
 };

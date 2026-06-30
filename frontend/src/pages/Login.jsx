@@ -2,11 +2,14 @@ import { useState } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
 
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 import { useAuth } from "../context/AuthContext";
 
 import { connectSocket } from "../sockets/socketManager";
+
+import AuthLayout from "../layout/AuthLayout";
+import { Field, Input, Button, Alert } from "../components/ui";
 
 const Login = () => {
 
@@ -74,145 +77,79 @@ const handleSubmit = async (e) => {
 
 
     return (
-
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-
-            <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
-
-                <h1 className="text-3xl font-bold text-center mb-2">
-                    Welcome Back
-                </h1>
-
-                <p className="text-gray-500 text-center mb-6">
-                    Login to Inventory Management System
-                </p>
-
-                {error && (
-
-                    <div className="bg-red-100 text-red-600 p-3 rounded-lg mb-4 text-sm">
-                        {error}
-                    </div>
-
-                )}
-
-                <form
-                    onSubmit={handleSubmit}
-                    className="space-y-5"
-                >
-
-                    {/* EMAIL */}
-
-                    <div>
-
-                        <label className="block mb-2 font-medium">
-                            Email Address
-                        </label>
-
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                            placeholder="Enter your email"
-                            className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
-                        />
-
-                    </div>
-
-                    {/* PASSWORD */}
-
-                    <div>
-
-                        <label className="block mb-2 font-medium">
-                            Password
-                        </label>
-
-                        <div className="relative">
-
-                            <input
-                                type={
-                                    showPassword
-                                        ? "text"
-                                        : "password"
-                                }
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                placeholder="Enter your password"
-                                className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
-                            />
-
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setShowPassword(
-                                        !showPassword
-                                    )
-                                }
-                                className="absolute right-4 top-4 text-gray-500"
-                            >
-
-                                {showPassword
-                                    ? <FaEyeSlash />
-                                    : <FaEye />
-                                }
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    {/* FORGOT PASSWORD */}
-
-                    <div className="flex justify-end">
-
-                        <Link
-                            to="/forgot-password"
-                            className="text-sm text-black hover:underline"
-                        >
-                            Forgot Password?
-                        </Link>
-
-                    </div>
-
-                    {/* LOGIN BUTTON */}
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition"
-                    >
-
-                        {loading
-                            ? "Logging in..."
-                            : "Login"
-                        }
-
-                    </button>
-
-                </form>
-
-                {/* REGISTER LINK */}
-
-                <p className="text-center text-sm text-gray-600 mt-6">
-
-                    Don&apos;t have an account?
-
+        <AuthLayout
+            title="Welcome back"
+            subtitle="Sign in to continue to your workspace"
+            footer={
+                <>
+                    Don&apos;t have an account?{" "}
                     <Link
                         to="/register"
-                        className="text-black font-semibold ml-1 hover:underline"
+                        className="font-semibold text-white hover:underline"
                     >
                         Register
                     </Link>
+                </>
+            }
+        >
+            <form onSubmit={handleSubmit} className="space-y-5">
+                {error ? <Alert variant="error">{error}</Alert> : null}
 
-                </p>
+                <Field label="Email address" required>
+                    <Input
+                        type="email"
+                        name="email"
+                        autoComplete="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        placeholder="you@example.com"
+                    />
+                </Field>
 
-            </div>
+                <div>
+                    <label htmlFor="login-password" className="label">
+                        Password<span className="text-red-500"> *</span>
+                    </label>
+                    <div className="relative">
+                        <Input
+                            id="login-password"
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            autoComplete="current-password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                            placeholder="Enter your password"
+                            className="input pr-11"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-400 hover:text-ink-700"
+                            aria-label={
+                                showPassword ? "Hide password" : "Show password"
+                            }
+                        >
+                            {showPassword ? <FiEyeOff /> : <FiEye />}
+                        </button>
+                    </div>
+                </div>
 
-        </div>
+                <div className="flex justify-end">
+                    <Link
+                        to="/forgot-password"
+                        className="text-sm font-medium text-brand-600 hover:underline"
+                    >
+                        Forgot password?
+                    </Link>
+                </div>
+
+                <Button type="submit" disabled={loading} className="w-full">
+                    {loading ? "Signing in…" : "Sign in"}
+                </Button>
+            </form>
+        </AuthLayout>
     );
 };
 

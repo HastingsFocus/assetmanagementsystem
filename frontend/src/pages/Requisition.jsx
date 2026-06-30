@@ -2,79 +2,55 @@ import { useState } from "react";
 import DashboardLayout from "../layout/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 import { createRequisition } from "../services/requisitionService";
+import {
+  PageHeader,
+  Card,
+  Field,
+  Input,
+  Select,
+  Textarea,
+  Button,
+  Alert,
+} from "../components/ui";
+import { FiFilePlus, FiPlus, FiTrash2 } from "react-icons/fi";
+
+const emptyItem = () => ({
+  name: "",
+  quantity: 1,
+  unitPrice: 0,
+  description: "",
+});
 
 const Requisition = () => {
   const { user } = useAuth();
 
   const [priority, setPriority] = useState("LOW");
-
-  const [items, setItems] = useState([
-    {
-      name: "",
-      quantity: 1,
-      unitPrice: 0,
-      description: "",
-    },
-  ]);
-
+  const [items, setItems] = useState([emptyItem()]);
   const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState(null);
 
-  /*
-  ==========================================
-  HANDLE ITEM CHANGE
-  ==========================================
-  */
-  const handleItemChange = (
-    index,
-    field,
-    value
-  ) => {
+  const handleItemChange = (index, field, value) => {
     const updatedItems = [...items];
-
     updatedItems[index][field] = value;
-
     setItems(updatedItems);
   };
 
-  /*
-  ==========================================
-  ADD ITEM
-  ==========================================
-  */
-  const addItem = () => {
-    setItems([
-      ...items,
-      {
-        name: "",
-        quantity: 1,
-        unitPrice: 0,
-        description: "",
-      },
-    ]);
-  };
+  const addItem = () => setItems([...items, emptyItem()]);
 
-  /*
-  ==========================================
-  REMOVE ITEM
-  ==========================================
-  */
   const removeItem = (index) => {
     if (items.length === 1) return;
-
-    const updatedItems = items.filter(
-      (_, i) => i !== index
-    );
-
-    setItems(updatedItems);
+    setItems(items.filter((_, i) => i !== index));
   };
 
-  /*
-  ==========================================
-  SUBMIT REQUISITION
-  ==========================================
-  */
+  const estimatedTotal = items.reduce(
+    (sum, item) =>
+      sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0),
+    0
+  );
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFeedback(null);
 
     const cleanedItems = items.filter(
       (item) =>
@@ -84,317 +60,179 @@ const Requisition = () => {
     );
 
     if (cleanedItems.length === 0) {
-      return alert(
-        "Please add at least one valid item."
-      );
+      setFeedback({
+        variant: "error",
+        text: "Please add at least one valid item (name, quantity and unit price).",
+      });
+      return;
     }
 
     try {
       setLoading(true);
-
       await createRequisition({
         department: user?.department?._id,
         priority,
         items: cleanedItems,
       });
-
-      alert(
-        "Requisition submitted successfully."
-      );
-
+      setFeedback({
+        variant: "success",
+        text: "Requisition submitted successfully.",
+      });
       setPriority("LOW");
-
-      setItems([
-        {
-          name: "",
-          quantity: 1,
-          unitPrice: 0,
-          description: "",
-        },
-      ]);
+      setItems([emptyItem()]);
     } catch (error) {
       console.error(error);
-
-      alert(
-        error?.response?.data?.message ||
-          "Failed to submit requisition."
-      );
+      setFeedback({
+        variant: "error",
+        text:
+          error?.response?.data?.message || "Failed to submit requisition.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  /*
-  ==========================================
-  ACCESS CONTROL
-  ==========================================
-  */
   if (user?.role !== "HOD") {
     return (
       <DashboardLayout>
-        <h2>Access Denied</h2>
+        <PageHeader title="Access denied" subtitle="This page is for HODs." />
       </DashboardLayout>
     );
   }
 
   return (
     <DashboardLayout>
-      <div
-        style={{
-          maxWidth: "1000px",
-          margin: "0 auto",
-          padding: "20px",
-        }}
-      >
-        <h1>Create Requisition</h1>
+      <PageHeader
+        icon={<FiFilePlus />}
+        title="Create Requisition"
+        subtitle="Submit a requisition for your department."
+      />
 
-        <p style={{ color: "#666" }}>
-          Submit a requisition for your
-          department.
-        </p>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {feedback ? (
+          <Alert variant={feedback.variant}>{feedback.text}</Alert>
+        ) : null}
 
-        {/* Department Information */}
-        <div
-          style={{
-            background: "#f8f9fa",
-            padding: "15px",
-            borderRadius: "10px",
-            marginBottom: "25px",
-            border: "1px solid #ddd",
-          }}
-        >
-          <strong>Department:</strong>{" "}
-          {user?.department?.name || "N/A"}
+        <Card>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <p className="label">Department</p>
+              <p className="rounded-lg bg-ink-50 px-3.5 py-2.5 text-sm font-medium text-ink-800">
+                {user?.department?.name || "N/A"}
+              </p>
+            </div>
+            <Field label="Priority">
+              <Select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+              >
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="CRITICAL">Critical</option>
+              </Select>
+            </Field>
+          </div>
+        </Card>
+
+        <div className="flex items-center justify-between">
+          <h2>Requisition items</h2>
+          <Button variant="secondary" size="sm" onClick={addItem}>
+            <FiPlus className="size-4" />
+            Add item
+          </Button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {/* Priority */}
-          <div style={formGroup}>
-            <label>Priority</label>
+        {items.map((item, index) => (
+          <Card key={index}>
+            <div className="mb-4 flex items-center justify-between">
+              <h3>Item {index + 1}</h3>
+              {items.length > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => removeItem(index)}
+                  className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700"
+                >
+                  <FiTrash2 className="size-4" />
+                  Remove
+                </button>
+              ) : null}
+            </div>
 
-            <select
-              value={priority}
-              onChange={(e) =>
-                setPriority(e.target.value)
-              }
-              style={inputStyle}
-            >
-              <option value="LOW">
-                LOW
-              </option>
-
-              <option value="MEDIUM">
-                MEDIUM
-              </option>
-
-              <option value="HIGH">
-                HIGH
-              </option>
-
-              <option value="CRITICAL">
-                CRITICAL
-              </option>
-            </select>
-          </div>
-
-          {/* Items */}
-          <h3 style={{ marginTop: "30px" }}>
-            Requisition Items
-          </h3>
-
-          {items.map((item, index) => (
-            <div
-              key={index}
-              style={{
-                border:
-                  "1px solid #e0e0e0",
-                borderRadius: "10px",
-                padding: "20px",
-                marginBottom: "20px",
-                background: "#fff",
-              }}
-            >
-              <h4>
-                Item {index + 1}
-              </h4>
-
-              <div style={formGroup}>
-                <label>
-                  Item Name
-                </label>
-
-                <input
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Item name">
+                <Input
                   type="text"
                   value={item.name}
                   onChange={(e) =>
-                    handleItemChange(
-                      index,
-                      "name",
-                      e.target.value
-                    )
+                    handleItemChange(index, "name", e.target.value)
                   }
-                  style={inputStyle}
+                  placeholder="e.g. Office chair"
                 />
-              </div>
-
-              <div style={formGroup}>
-                <label>
-                  Quantity
-                </label>
-
-                <input
+              </Field>
+              <Field label="Quantity">
+                <Input
                   type="number"
                   min="1"
                   value={item.quantity}
                   onChange={(e) =>
-                    handleItemChange(
-                      index,
-                      "quantity",
-                      e.target.value
-                    )
+                    handleItemChange(index, "quantity", e.target.value)
                   }
-                  style={inputStyle}
                 />
-              </div>
-
-              <div style={formGroup}>
-                <label>
-                  Unit Price (MWK)
-                </label>
-
-                <input
+              </Field>
+              <Field label="Unit price (MWK)">
+                <Input
                   type="number"
                   min="0"
                   value={item.unitPrice}
                   onChange={(e) =>
-                    handleItemChange(
-                      index,
-                      "unitPrice",
-                      e.target.value
-                    )
+                    handleItemChange(index, "unitPrice", e.target.value)
                   }
-                  style={inputStyle}
                 />
-              </div>
+              </Field>
+              <Field label="Line total">
+                <Input
+                  type="text"
+                  readOnly
+                  value={`MWK ${(
+                    (Number(item.quantity) || 0) *
+                    (Number(item.unitPrice) || 0)
+                  ).toLocaleString()}`}
+                />
+              </Field>
+            </div>
 
-              <div style={formGroup}>
-                <label>
-                  Description
-                </label>
-
-                <textarea
-                  value={
-                    item.description
-                  }
+            <div className="mt-4">
+              <Field label="Description">
+                <Textarea
+                  value={item.description}
                   onChange={(e) =>
-                    handleItemChange(
-                      index,
-                      "description",
-                      e.target.value
-                    )
+                    handleItemChange(index, "description", e.target.value)
                   }
                   rows="3"
-                  style={{
-                    ...inputStyle,
-                    resize:
-                      "vertical",
-                  }}
+                  placeholder="Optional notes about this item"
                 />
-              </div>
-
-              {items.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    removeItem(index)
-                  }
-                  style={
-                    removeButton
-                  }
-                >
-                  Remove Item
-                </button>
-              )}
+              </Field>
             </div>
-          ))}
+          </Card>
+        ))}
 
-          {/* Actions */}
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-            }}
-          >
-            <button
-              type="button"
-              onClick={addItem}
-              style={addButton}
-            >
-              + Add Item
-            </button>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={submitButton}
-            >
-              {loading
-                ? "Submitting..."
-                : "Submit Requisition"}
-            </button>
+        <Card>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-ink-500">Estimated total</p>
+              <p className="text-xl font-bold text-ink-900">
+                MWK {estimatedTotal.toLocaleString()}
+              </p>
+            </div>
+            <Button type="submit" variant="success" disabled={loading}>
+              {loading ? "Submitting…" : "Submit requisition"}
+            </Button>
           </div>
-        </form>
-      </div>
+        </Card>
+      </form>
     </DashboardLayout>
   );
-};
-
-/*
-==========================================
-STYLES
-==========================================
-*/
-
-const formGroup = {
-  display: "flex",
-  flexDirection: "column",
-  marginBottom: "15px",
-};
-
-const inputStyle = {
-  padding: "10px",
-  border: "1px solid #ccc",
-  borderRadius: "8px",
-  marginTop: "5px",
-};
-
-const addButton = {
-  background: "#007bff",
-  color: "#fff",
-  border: "none",
-  padding: "12px 18px",
-  borderRadius: "8px",
-  cursor: "pointer",
-  fontWeight: "600",
-};
-
-const submitButton = {
-  background: "#28a745",
-  color: "#fff",
-  border: "none",
-  padding: "12px 18px",
-  borderRadius: "8px",
-  cursor: "pointer",
-  fontWeight: "600",
-};
-
-const removeButton = {
-  background: "#dc3545",
-  color: "#fff",
-  border: "none",
-  padding: "10px 15px",
-  borderRadius: "8px",
-  cursor: "pointer",
 };
 
 export default Requisition;

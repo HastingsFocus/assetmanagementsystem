@@ -2,254 +2,200 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "../../layout/DashboardLayout";
 import { createManualAssets } from "../../services/assetService";
 import { getDepartments } from "../../services/departmentService";
+import {
+  PageHeader,
+  Card,
+  Field,
+  Input,
+  Select,
+  Textarea,
+  Button,
+  Alert,
+} from "../../components/ui";
+import { FiPlusSquare } from "react-icons/fi";
+
+const initialForm = {
+  assetName: "",
+  category: "",
+  quantity: 1,
+  department: "",
+  source: "donation",
+  purchasePrice: 0,
+  brand: "",
+  model: "",
+  remarks: "",
+};
 
 const CreateAssetPage = () => {
-    const [departments, setDepartments] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        assetName: "",
-        category: "",
-        quantity: 1,
-        department: "",
-        source: "donation",
-        purchasePrice: 0,
-        brand: "",
-        model: "",
-        remarks: "",
-    });
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  const [formData, setFormData] = useState(initialForm);
 
-    /*
-    ==========================================
-    LOAD DEPARTMENTS
-    ==========================================
-    */
-    const loadDepartments = async () => {
-        try {
-            const data = await getDepartments();
-            setDepartments(data.departments || []);
-        } catch (error) {
-            console.error("Failed loading departments", error);
-        }
-    };
+  const loadDepartments = async () => {
+    try {
+      const data = await getDepartments();
+      setDepartments(data.departments || []);
+    } catch (error) {
+      console.error("Failed loading departments", error);
+    }
+  };
 
-    useEffect(() => {
-        loadDepartments();
-    }, []);
+  useEffect(() => {
+    loadDepartments();
+  }, []);
 
-    /*
-    ==========================================
-    HANDLE INPUT CHANGE
-    ==========================================
-    */
-    const handleChange = (e) => {
-        setFormData((prev) => ({
-            ...prev,
-            [e.target.name]: e.target.value
-        }));
-    };
+  const handleChange = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
-    /*
-    ==========================================
-    SUBMIT FORM
-    ==========================================
-    */
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            setLoading(true);
-            const response = await createManualAssets(formData);
-            alert(response.message || "Assets created successfully");
-            setFormData({
-                assetName: "",
-                category: "",
-                quantity: 1,
-                department: "",
-                source: "donation",
-                purchasePrice: 0,
-                brand: "",
-                model: "",
-                remarks: "",
-            });
-        } catch (error) {
-            console.error(error);
-            alert(error?.response?.data?.message || "Failed to create assets");
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFeedback(null);
+    try {
+      setLoading(true);
+      const response = await createManualAssets(formData);
+      setFeedback({
+        variant: "success",
+        text: response.message || "Assets created successfully.",
+      });
+      setFormData(initialForm);
+    } catch (error) {
+      console.error(error);
+      setFeedback({
+        variant: "error",
+        text: error?.response?.data?.message || "Failed to create assets.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <DashboardLayout>
-            <div style={{
-                padding: "24px",
-                maxWidth: "800px",
-            }}>
-                <h2>➕ Create Assets</h2>
-                <p style={{
-                    color: "#666",
-                    marginBottom: "25px",
-                }}>
-                    Add assets obtained through donations, purchases, transfers, or other sources.
-                </p>
+  return (
+    <DashboardLayout>
+      <PageHeader
+        icon={<FiPlusSquare />}
+        title="Create Assets"
+        subtitle="Add assets obtained through donations, purchases, transfers or other sources."
+      />
 
-                <form onSubmit={handleSubmit}>
-                    <div style={formGroup}>
-                        <label>Asset Name</label>
-                        <input
-                            type="text"
-                            name="assetName"
-                            value={formData.assetName}
-                            onChange={handleChange}
-                            required
-                            style={input}
-                            placeholder="Lenovo Laptop"
-                        />
-                    </div>
+      <div className="max-w-3xl">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {feedback ? (
+            <Alert variant={feedback.variant}>{feedback.text}</Alert>
+          ) : null}
 
-                    <div style={formGroup}>
-                        <label>Category</label>
-                        <input
-                            type="text"
-                            name="category"
-                            value={formData.category}
-                            onChange={handleChange}
-                            required
-                            style={input}
-                            placeholder="Computer"
-                        />
-                    </div>
-
-                    <div style={formGroup}>
-                        <label>Quantity</label>
-                        <input
-                            type="number"
-                            name="quantity"
-                            value={formData.quantity}
-                            onChange={handleChange}
-                            min="1"
-                            required
-                            style={input}
-                        />
-                    </div>
-
-                    <div style={formGroup}>
-                        <label>Department</label>
-                        <select
-                            name="department"
-                            value={formData.department}
-                            onChange={handleChange}
-                            required
-                            style={input}
-                        >
-                            <option value="">Select Department</option>
-                            {departments.map((dept) => (
-                                <option key={dept._id} value={dept.code}>
-                                    {dept.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div style={formGroup}>
-                        <label>Source</label>
-                        <select
-                            name="source"
-                            value={formData.source}
-                            onChange={handleChange}
-                            required
-                            style={input}
-                        >
-                            <option value="donation">Donation</option>
-                            <option value="purchase">Purchase</option>
-                            <option value="transfer">Transfer</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-
-                    <div style={formGroup}>
-                        <label>Purchase Price</label>
-                        <input
-                            type="number"
-                            name="purchasePrice"
-                            value={formData.purchasePrice}
-                            onChange={handleChange}
-                            style={input}
-                        />
-                    </div>
-
-                    <div style={formGroup}>
-                        <label>Brand</label>
-                        <input
-                            type="text"
-                            name="brand"
-                            value={formData.brand}
-                            onChange={handleChange}
-                            style={input}
-                            placeholder="Lenovo"
-                        />
-                    </div>
-
-                    <div style={formGroup}>
-                        <label>Model</label>
-                        <input
-                            type="text"
-                            name="model"
-                            value={formData.model}
-                            onChange={handleChange}
-                            style={input}
-                            placeholder="ThinkPad T14"
-                        />
-                    </div>
-
-                    <div style={formGroup}>
-                        <label>Remarks</label>
-                        <textarea
-                            name="remarks"
-                            value={formData.remarks}
-                            onChange={handleChange}
-                            rows="4"
-                            style={{
-                                ...input,
-                                resize: "vertical"
-                            }}
-                            placeholder="Additional notes..."
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={submitButton}
-                    >
-                        {loading ? "Creating Assets..." : "Create Assets"}
-                    </button>
-                </form>
+          <Card>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Asset name" required>
+                <Input
+                  type="text"
+                  name="assetName"
+                  value={formData.assetName}
+                  onChange={handleChange}
+                  required
+                  placeholder="Lenovo Laptop"
+                />
+              </Field>
+              <Field label="Category" required>
+                <Input
+                  type="text"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  required
+                  placeholder="Computer"
+                />
+              </Field>
+              <Field label="Quantity" required>
+                <Input
+                  type="number"
+                  name="quantity"
+                  min="1"
+                  value={formData.quantity}
+                  onChange={handleChange}
+                  required
+                />
+              </Field>
+              <Field label="Department" required>
+                <Select
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select department</option>
+                  {departments.map((dept) => (
+                    <option key={dept._id} value={dept.code}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Source" required>
+                <Select
+                  name="source"
+                  value={formData.source}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="donation">Donation</option>
+                  <option value="purchase">Purchase</option>
+                  <option value="transfer">Transfer</option>
+                  <option value="other">Other</option>
+                </Select>
+              </Field>
+              <Field label="Purchase price (MWK)">
+                <Input
+                  type="number"
+                  name="purchasePrice"
+                  min="0"
+                  value={formData.purchasePrice}
+                  onChange={handleChange}
+                />
+              </Field>
+              <Field label="Brand">
+                <Input
+                  type="text"
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleChange}
+                  placeholder="Lenovo"
+                />
+              </Field>
+              <Field label="Model">
+                <Input
+                  type="text"
+                  name="model"
+                  value={formData.model}
+                  onChange={handleChange}
+                  placeholder="ThinkPad T14"
+                />
+              </Field>
             </div>
-        </DashboardLayout>
-    );
-};
 
-const formGroup = {
-    marginBottom: "18px",
-    display: "flex",
-    flexDirection: "column",
-};
+            <div className="mt-4">
+              <Field label="Remarks">
+                <Textarea
+                  name="remarks"
+                  rows="4"
+                  value={formData.remarks}
+                  onChange={handleChange}
+                  placeholder="Additional notes…"
+                />
+              </Field>
+            </div>
+          </Card>
 
-const input = {
-    padding: "10px",
-    border: "1px solid #ccc",
-    borderRadius: "8px",
-    marginTop: "6px",
-};
-
-const submitButton = {
-    background: "#28a745",
-    color: "#fff",
-    border: "none",
-    padding: "12px 20px",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontWeight: "600",
+          <div className="flex justify-end">
+            <Button type="submit" variant="success" disabled={loading}>
+              {loading ? "Creating assets…" : "Create assets"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </DashboardLayout>
+  );
 };
 
 export default CreateAssetPage;

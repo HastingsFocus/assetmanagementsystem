@@ -1,52 +1,62 @@
 import DashboardLayout from "../layout/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
+import { PageHeader, Card } from "../components/ui";
+import { FiMail, FiShield, FiHome, FiHash } from "react-icons/fi";
+
+const InfoRow = ({ icon: Icon, label, value }) => (
+  <div className="flex items-start gap-3 py-3">
+    <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+      <Icon className="size-4" />
+    </span>
+    <div>
+      <p className="text-xs font-medium uppercase tracking-wide text-ink-400">
+        {label}
+      </p>
+      <p className="text-sm font-medium text-ink-800">{value || "—"}</p>
+    </div>
+  </div>
+);
 
 const Dashboard = () => {
-  
   const { user } = useAuth();
 
   return (
     <DashboardLayout>
-      <div
-        style={{
-          padding: "20px",
-        }}
-      >
-        <h1>Dashboard</h1>
+      <PageHeader
+        title={`Welcome${user?.name ? `, ${user.name}` : ""}`}
+        subtitle="Here's an overview of your account and workspace."
+      />
 
-        <div
-          style={{
-            background: "#fff",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow:
-              "0 2px 8px rgba(0,0,0,0.08)",
-            maxWidth: "600px",
-            marginTop: "20px",
-          }}
-        >
-          <h2>User Information</h2>
-
-          <p>
-            <strong>Email:</strong>{" "}
-            {user?.email}
+      <div className="grid gap-5 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <h2 className="mb-1">Account details</h2>
+          <p className="mb-2 text-sm text-ink-500">
+            Your profile information within the asset management system.
           </p>
+          <div className="divide-y divide-ink-100">
+            <InfoRow icon={FiMail} label="Email" value={user?.email} />
+            <InfoRow icon={FiShield} label="Role" value={user?.role} />
+            <InfoRow
+              icon={FiHome}
+              label="Department"
+              value={user?.department?.name}
+            />
+            <InfoRow
+              icon={FiHash}
+              label="Department code"
+              value={user?.department?.code}
+            />
+          </div>
+        </Card>
 
-          <p>
-            <strong>Role:</strong>{" "}
-            {user?.role}
+        <Card className="bg-gradient-to-br from-brand-600 to-brand-800 text-white">
+          <p className="text-sm font-medium text-brand-100">Signed in as</p>
+          <p className="mt-1 text-2xl font-bold">{user?.role}</p>
+          <p className="mt-4 text-sm text-brand-100">
+            Use the navigation on the left to manage requisitions, assets,
+            transfers and approvals available to your role.
           </p>
-
-          <p>
-            <strong>Department:</strong>{" "}
-            {user?.department?.name || "N/A"}
-          </p>
-
-          <p>
-            <strong>Department Code:</strong>{" "}
-            {user?.department?.code || "N/A"}
-          </p>
-        </div>
+        </Card>
       </div>
     </DashboardLayout>
   );

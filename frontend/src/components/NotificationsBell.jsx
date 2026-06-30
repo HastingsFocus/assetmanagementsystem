@@ -1,65 +1,47 @@
 import { useEffect, useState } from "react";
-import {
-  getNotifications,
-} from "../services/notificationService";
+import { getNotifications } from "../services/notificationService";
 
-const NotificationBell = () => {
-  const [notifications, setNotifications] =
-    useState([]);
+/**
+ * NotificationsBell — renders only the unread-count badge. It is placed next
+ * to a bell icon/label by its parent (e.g. the sidebar nav link), so it no
+ * longer renders its own icon.
+ */
+const NotificationsBell = () => {
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
+    let active = true;
+
+    const fetchNotifications = async () => {
+      try {
+        const data = await getNotifications();
+        const list = Array.isArray(data)
+          ? data
+          : data.notifications || data.data || [];
+        if (active) setNotifications(list);
+      } catch (error) {
+        console.error("Failed to load notifications", error);
+      }
+    };
+
     fetchNotifications();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const fetchNotifications = async () => {
-  try {
-    const data = await getNotifications();
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-   // console.log("RAW NOTIF DATA:", data);
-
-    // 👇 FIX HERE
-    const list = Array.isArray(data)
-      ? data
-      : data.notifications || data.data || [];
-
-    setNotifications(list);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-  const unreadCount =
-    notifications.filter(
-      (n) => !n.isRead
-    ).length;
+  if (unreadCount === 0) return null;
 
   return (
-    <div
-      style={{
-        position: "relative",
-        fontSize: "24px",
-      }}
+    <span
+      className="inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white"
+      aria-label={`${unreadCount} unread notifications`}
     >
-      🔔
-
-      {unreadCount > 0 && (
-        <span
-          style={{
-            position: "absolute",
-            top: "-8px",
-            right: "-10px",
-            background: "red",
-            color: "white",
-            borderRadius: "50%",
-            padding: "2px 8px",
-            fontSize: "12px",
-          }}
-        >
-          {unreadCount}
-        </span>
-      )}
-    </div>
+      {unreadCount > 99 ? "99+" : unreadCount}
+    </span>
   );
 };
 
-export default NotificationBell;
+export default NotificationsBell;

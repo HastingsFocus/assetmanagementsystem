@@ -2,6 +2,16 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../layout/DashboardLayout";
 import { getAllAssets } from "../../services/assetService";
+import {
+  PageHeader,
+  Card,
+  Table,
+  Button,
+  StatusBadge,
+  Loader,
+  EmptyState,
+} from "../../components/ui";
+import { FiBox } from "react-icons/fi";
 
 const AssetListPage = () => {
   const [groupedAssets, setGroupedAssets] = useState({});
@@ -49,187 +59,89 @@ const AssetListPage = () => {
     loadAssets();
   }, []);
 
+  const departments = Object.keys(groupedAssets);
+
   return (
     <DashboardLayout>
-      <div style={{ padding: "24px" }}>
-        <h2>📦 Asset Register</h2>
+      <PageHeader
+        icon={<FiBox />}
+        title="Asset Register"
+        subtitle="All assets grouped by department."
+      />
 
-        <p
-          style={{
-            color: "#666",
-            marginBottom: "20px",
-          }}
-        >
-          View all assets grouped by department.
-        </p>
+      {loading ? (
+        <Loader label="Loading assets…" />
+      ) : departments.length === 0 ? (
+        <EmptyState
+          icon={<FiBox />}
+          title="No assets found"
+          message="Once assets are created they will appear here grouped by department."
+        />
+      ) : (
+        <div className="space-y-6">
+          {departments.map((department) => (
+            <Card key={department} padded={false}>
+              <div className="flex items-center justify-between px-5 py-4">
+                <h3>{department}</h3>
+                <span className="badge badge-gray">
+                  {groupedAssets[department].length} assets
+                </span>
+              </div>
 
-        {loading ? (
-          <p>Loading assets...</p>
-        ) : Object.keys(groupedAssets).length === 0 ? (
-          <div style={emptyCard}>
-            No assets found.
-          </div>
-        ) : (
-          Object.keys(groupedAssets).map((department) => (
-            <div
-              key={department}
-              style={departmentCard}
-            >
-              <h3
-                style={{
-                  marginBottom: "15px",
-                }}
-              >
-                📁 {department}
-              </h3>
-
-              <table style={table}>
+              <Table>
                 <thead>
                   <tr>
-                    <th style={header}>Asset Tag</th>
-                    <th style={header}>Asset Name</th>
-                    <th style={header}>Category</th>
-                    <th style={header}>Brand</th>
-                    <th style={header}>Model</th>
-                    <th style={header}>Source</th>
-                    <th style={header}>Status</th>
-                    <th style={header}>Price</th>
-                    <th style={header}>Action</th>
+                    <th>Asset Tag</th>
+                    <th>Asset Name</th>
+                    <th>Category</th>
+                    <th>Brand</th>
+                    <th>Model</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th>Price</th>
+                    <th className="text-right">Action</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {groupedAssets[department].map(
-                    (asset) => (
-                      <tr key={asset._id}>
-                        <td style={cell}>
-                          {asset.assetTag}
-                        </td>
-
-                        <td style={cell}>
-                          {asset.assetName}
-                        </td>
-
-                        <td style={cell}>
-                          {asset.category}
-                        </td>
-
-                        <td style={cell}>
-                          {asset.brand || "-"}
-                        </td>
-
-                        <td style={cell}>
-                          {asset.model || "-"}
-                        </td>
-
-                        <td style={cell}>
-                          {asset.source}
-                        </td>
-
-                        <td style={cell}>
-                          <span
-                            style={statusBadge(
-                              asset.status
-                            )}
-                          >
-                            {asset.status}
-                          </span>
-                        </td>
-
-                        <td style={cell}>
-                          MWK{" "}
-                          {Number(
-                            asset.purchasePrice || 0
-                          ).toLocaleString()}
-                        </td>
-
-                        <td style={cell}>
-                          <button
-                            onClick={() =>
-                              navigate(
-                                `/inventory/assets/${asset._id}`
-                              )
-                            }
-                            style={detailsBtn}
-                          >
-                            View Details
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  )}
+                  {groupedAssets[department].map((asset) => (
+                    <tr key={asset._id}>
+                      <td className="font-medium text-ink-900">
+                        {asset.assetTag}
+                      </td>
+                      <td>{asset.assetName}</td>
+                      <td>{asset.category}</td>
+                      <td>{asset.brand || "-"}</td>
+                      <td>{asset.model || "-"}</td>
+                      <td>{asset.source}</td>
+                      <td>
+                        <StatusBadge status={asset.status} />
+                      </td>
+                      <td className="whitespace-nowrap">
+                        MWK{" "}
+                        {Number(asset.purchasePrice || 0).toLocaleString()}
+                      </td>
+                      <td className="text-right">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() =>
+                            navigate(`/inventory/assets/${asset._id}`)
+                          }
+                        >
+                          View Details
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
-              </table>
-            </div>
-          ))
-        )}
-      </div>
+              </Table>
+            </Card>
+          ))}
+        </div>
+      )}
     </DashboardLayout>
   );
 };
-
-/*
-=========================================
-STYLES
-=========================================
-*/
-
-const table = {
-  width: "100%",
-  borderCollapse: "collapse",
-  background: "#fff",
-};
-
-const header = {
-  border: "1px solid #ddd",
-  padding: "12px",
-  background: "#f5f5f5",
-  textAlign: "left",
-};
-
-const cell = {
-  border: "1px solid #ddd",
-  padding: "10px",
-};
-
-const departmentCard = {
-  marginBottom: "30px",
-  padding: "20px",
-  background: "#fff",
-  border: "1px solid #ddd",
-  borderRadius: "10px",
-};
-
-const emptyCard = {
-  padding: "20px",
-  background: "#fff",
-  border: "1px solid #ddd",
-  borderRadius: "10px",
-};
-
-const detailsBtn = {
-  padding: "8px 14px",
-  border: "none",
-  borderRadius: "6px",
-  background: "#007bff",
-  color: "#fff",
-  cursor: "pointer",
-  fontWeight: "bold",
-};
-
-const statusBadge = (status) => ({
-  padding: "4px 10px",
-  borderRadius: "20px",
-  fontSize: "12px",
-  fontWeight: "bold",
-  background:
-    status === "in_store"
-      ? "#d4edda"
-      : status === "assigned"
-      ? "#cce5ff"
-      : status === "maintenance"
-      ? "#fff3cd"
-      : "#f8d7da",
-});
 
 export default AssetListPage;

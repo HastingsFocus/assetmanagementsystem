@@ -2,11 +2,14 @@ import { useState } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
 
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 import { useAuth } from "../context/AuthContext";
 
 import { connectSocket } from "../sockets/socketManager";
+
+import AuthLayout from "../layout/AuthLayout";
+import { Field, Input, Button, Alert } from "../components/ui";
 
 const Register = () => {
 
@@ -74,26 +77,21 @@ const Register = () => {
 
         const password = formData.password;
 
+        if (!password) {
+            return { text: "", className: "" };
+        }
+
         if (password.length < 6) {
-            return {
-                text: "Weak",
-                color: "red"
-            };
+            return { text: "Weak", className: "text-red-600" };
         }
 
         if (
             /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password)
         ) {
-            return {
-                text: "Strong",
-                color: "green"
-            };
+            return { text: "Strong", className: "text-emerald-600" };
         }
 
-        return {
-            text: "Medium",
-            color: "orange"
-        };
+        return { text: "Medium", className: "text-amber-600" };
     };
 
     const strength = getPasswordStrength();
@@ -141,200 +139,125 @@ const Register = () => {
 };
 
     return (
-
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-
-            <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
-
-                <h1 className="text-3xl font-bold text-center mb-2">
-                    Create Account
-                </h1>
-
-                <p className="text-gray-500 text-center mb-6">
-                    Inventory Management System
-                </p>
-
-                {error && (
-
-                    <div className="bg-red-100 text-red-600 p-3 rounded-lg mb-4 text-sm">
-                        {error}
-                    </div>
-
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-5">
-
-                    {/* NAME */}
-
-                    <div>
-
-                        <label className="block mb-2 font-medium">
-                            Full Name
-                        </label>
-
-                        <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            required
-                            className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
-                            placeholder="Enter your name"
-                        />
-
-                    </div>
-
-                    {/* EMAIL */}
-
-                    <div>
-
-                        <label className="block mb-2 font-medium">
-                            Email Address
-                        </label>
-
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                            className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
-                            placeholder="Enter your email"
-                        />
-
-                    </div>
-
-                    {/* PASSWORD */}
-
-                    <div>
-
-                        <label className="block mb-2 font-medium">
-                            Password
-                        </label>
-
-                        <div className="relative">
-
-                            <input
-                                type={
-                                    showPassword
-                                        ? "text"
-                                        : "password"
-                                }
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
-                                placeholder="Enter password"
-                            />
-
-                            <button
-                                type="button"
-                                className="absolute right-4 top-4 text-gray-500"
-                                onClick={() =>
-                                    setShowPassword(!showPassword)
-                                }
-                            >
-
-                                {showPassword
-                                    ? <FaEyeSlash />
-                                    : <FaEye />
-                                }
-
-                            </button>
-
-                        </div>
-
-                        {/* PASSWORD STRENGTH */}
-
-                        <p
-                            className={`mt-2 text-sm text-${strength.color}-600`}
-                        >
-                            Password Strength: {strength.text}
-                        </p>
-
-                    </div>
-
-                    {/* CONFIRM PASSWORD */}
-
-                    <div>
-
-                        <label className="block mb-2 font-medium">
-                            Confirm Password
-                        </label>
-
-                        <div className="relative">
-
-                            <input
-                                type={
-                                    showConfirmPassword
-                                        ? "text"
-                                        : "password"
-                                }
-                                name="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                required
-                                className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
-                                placeholder="Confirm password"
-                            />
-
-                            <button
-                                type="button"
-                                className="absolute right-4 top-4 text-gray-500"
-                                onClick={() =>
-                                    setShowConfirmPassword(
-                                        !showConfirmPassword
-                                    )
-                                }
-                            >
-
-                                {showConfirmPassword
-                                    ? <FaEyeSlash />
-                                    : <FaEye />
-                                }
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    {/* BUTTON */}
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition"
-                    >
-
-                        {loading
-                            ? "Creating Account..."
-                            : "Register"
-                        }
-
-                    </button>
-
-                </form>
-
-                {/* LOGIN LINK */}
-
-                <p className="text-center text-sm text-gray-600 mt-6">
-
-                    Already have an account?
-
+        <AuthLayout
+            title="Create your account"
+            subtitle="Register with your approved work email"
+            footer={
+                <>
+                    Already have an account?{" "}
                     <Link
                         to="/login"
-                        className="text-black font-semibold ml-1 hover:underline"
+                        className="font-semibold text-white hover:underline"
                     >
-                        Login
+                        Sign in
                     </Link>
+                </>
+            }
+        >
+            <form onSubmit={handleSubmit} className="space-y-5">
+                {error ? <Alert variant="error">{error}</Alert> : null}
 
-                </p>
+                <Field label="Full name" required>
+                    <Input
+                        type="text"
+                        name="name"
+                        autoComplete="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required
+                        placeholder="Jane Banda"
+                    />
+                </Field>
 
-            </div>
+                <Field label="Email address" required>
+                    <Input
+                        type="email"
+                        name="email"
+                        autoComplete="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        placeholder="you@example.com"
+                    />
+                </Field>
 
-        </div>
+                <div>
+                    <label htmlFor="register-password" className="label">
+                        Password<span className="text-red-500"> *</span>
+                    </label>
+                    <div className="relative">
+                        <Input
+                            id="register-password"
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            autoComplete="new-password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                            placeholder="Create a password"
+                            className="input pr-11"
+                        />
+                        <button
+                            type="button"
+                            className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-400 hover:text-ink-700"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={
+                                showPassword ? "Hide password" : "Show password"
+                            }
+                        >
+                            {showPassword ? <FiEyeOff /> : <FiEye />}
+                        </button>
+                    </div>
+                    <p className="mt-1.5 text-xs text-ink-500">
+                        At least 6 characters with an uppercase letter, a number
+                        and a symbol.
+                    </p>
+                </div>
+
+                {strength.text ? (
+                    <p className={`-mt-2 text-xs font-medium ${strength.className}`}>
+                        Password strength: {strength.text}
+                    </p>
+                ) : null}
+
+                <div>
+                    <label htmlFor="register-confirm" className="label">
+                        Confirm password<span className="text-red-500"> *</span>
+                    </label>
+                    <div className="relative">
+                        <Input
+                            id="register-confirm"
+                            type={showConfirmPassword ? "text" : "password"}
+                            name="confirmPassword"
+                            autoComplete="new-password"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            required
+                            placeholder="Re-enter your password"
+                            className="input pr-11"
+                        />
+                        <button
+                            type="button"
+                            className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-400 hover:text-ink-700"
+                            onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            aria-label={
+                                showConfirmPassword
+                                    ? "Hide password"
+                                    : "Show password"
+                            }
+                        >
+                            {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                        </button>
+                    </div>
+                </div>
+
+                <Button type="submit" disabled={loading} className="w-full">
+                    {loading ? "Creating account…" : "Create account"}
+                </Button>
+            </form>
+        </AuthLayout>
     );
 };
 

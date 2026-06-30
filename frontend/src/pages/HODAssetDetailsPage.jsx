@@ -1,26 +1,43 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "../layout/DashboardLayout";
 import {
   getAssetById,
   requestConditionChange,
 } from "../services/assetService";
+import {
+  PageHeader,
+  Card,
+  Field,
+  Select,
+  Textarea,
+  Button,
+  StatusBadge,
+  Alert,
+  Loader,
+} from "../components/ui";
+import { FiArrowLeft, FiRepeat } from "react-icons/fi";
+
+const Detail = ({ label, value }) => (
+  <div>
+    <p className="text-xs uppercase tracking-wide text-ink-400">{label}</p>
+    <p className="font-medium text-ink-800">{value || "—"}</p>
+  </div>
+);
 
 const HODAssetDetailsPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [asset, setAsset] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const [requestedCondition, setRequestedCondition] =
-    useState("");
-
+  const [requestedCondition, setRequestedCondition] = useState("");
   const [reason, setReason] = useState("");
+  const [feedback, setFeedback] = useState(null);
 
   const loadAsset = async () => {
     try {
       const response = await getAssetById(id);
-
       setAsset(response.asset);
     } catch (error) {
       console.error(error);
@@ -34,43 +51,35 @@ const HODAssetDetailsPage = () => {
   }, [id]);
 
   const handleRequest = async () => {
-    try {
-      if (!requestedCondition || !reason) {
-        return alert(
-          "Please select condition and provide reason"
-        );
-      }
-
-      await requestConditionChange(id, {
-        requestedCondition,
-        reason,
+    setFeedback(null);
+    if (!requestedCondition || !reason) {
+      setFeedback({
+        variant: "error",
+        text: "Please select a condition and provide a reason.",
       });
-
-      alert(
-        "Condition change request submitted successfully"
-      );
-
+      return;
+    }
+    try {
+      await requestConditionChange(id, { requestedCondition, reason });
+      setFeedback({
+        variant: "success",
+        text: "Condition change request submitted successfully.",
+      });
       setRequestedCondition("");
       setReason("");
     } catch (error) {
-  console.error("FULL ERROR:", error);
-
-  console.log(
-    "BACKEND RESPONSE:",
-    error.response?.data
-  );
-
-  alert(
-    error.response?.data?.message ||
-    "Failed to submit request"
-  );
-}
+      console.error("FULL ERROR:", error);
+      setFeedback({
+        variant: "error",
+        text: error.response?.data?.message || "Failed to submit request.",
+      });
+    }
   };
 
   if (loading) {
     return (
       <DashboardLayout>
-        <p>Loading asset...</p>
+        <Loader label="Loading asset…" />
       </DashboardLayout>
     );
   }
@@ -78,187 +87,101 @@ const HODAssetDetailsPage = () => {
   if (!asset) {
     return (
       <DashboardLayout>
-        <p>Asset not found.</p>
+        <PageHeader title="Asset not found" />
       </DashboardLayout>
     );
   }
 
   return (
     <DashboardLayout>
-      <div style={container}>
-        <h2>📦 Asset Details</h2>
+      <PageHeader
+        title={asset.assetName}
+        subtitle={asset.assetTag}
+        actions={
+          <Button variant="secondary" onClick={() => navigate(-1)}>
+            <FiArrowLeft className="size-4" />
+            Back
+          </Button>
+        }
+      />
 
-        <div style={card}>
-          <Detail
-            label="Asset Tag"
-            value={asset.assetTag}
-          />
+      <div className="grid gap-5 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <h2>Asset details</h2>
+            <StatusBadge status={asset.status} />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Detail label="Asset Tag" value={asset.assetTag} />
+            <Detail label="Asset Name" value={asset.assetName} />
+            <Detail label="Category" value={asset.category} />
+            <Detail label="Brand" value={asset.brand} />
+            <Detail label="Model" value={asset.model} />
+            <Detail label="Serial Number" value={asset.serialNumber} />
+            <Detail
+              label="Department"
+              value={asset.department?.name || asset.department}
+            />
+            <Detail label="Source" value={asset.source} />
+            <Detail label="Condition" value={asset.condition} />
+            <Detail
+              label="Purchase Price"
+              value={`MWK ${Number(
+                asset.purchasePrice || 0
+              ).toLocaleString()}`}
+            />
+          </div>
+        </Card>
 
-          <Detail
-            label="Asset Name"
-            value={asset.assetName}
-          />
+        <Card>
+          <h3 className="flex items-center gap-2">
+            <FiRepeat className="size-4 text-brand-600" />
+            Request condition change
+          </h3>
+          <p className="mt-1 text-sm text-ink-500">
+            Current: <strong>{asset.condition || "Not specified"}</strong>
+          </p>
 
-          <Detail
-            label="Category"
-            value={asset.category}
-          />
+          {feedback ? (
+            <Alert variant={feedback.variant} className="mt-4">
+              {feedback.text}
+            </Alert>
+          ) : null}
 
-          <Detail
-            label="Brand"
-            value={asset.brand}
-          />
+          <div className="mt-4 space-y-4">
+            <Field label="Requested condition">
+              <Select
+                value={requestedCondition}
+                onChange={(e) => setRequestedCondition(e.target.value)}
+              >
+                <option value="">Select condition</option>
+                <option value="excellent">Excellent</option>
+                <option value="good">Good</option>
+                <option value="fair">Fair</option>
+                <option value="poor">Poor</option>
+                <option value="unserviceable">
+                  Unserviceable (move to archive)
+                </option>
+              </Select>
+            </Field>
 
-          <Detail
-            label="Model"
-            value={asset.model}
-          />
+            <Field label="Reason">
+              <Textarea
+                rows="5"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Explain why the condition should be changed…"
+              />
+            </Field>
 
-          <Detail
-            label="Serial Number"
-            value={asset.serialNumber}
-          />
-
-          <Detail
-            label="Department"
-            value={
-              asset.department?.name ||
-              asset.department
-            }
-          />
-
-          <Detail
-            label="Source"
-            value={asset.source}
-          />
-
-          <Detail
-            label="Status"
-            value={asset.status}
-          />
-
-          <Detail
-  label="Condition"
-  value={asset.condition}
-/>
-
-          <Detail
-            label="Purchase Price"
-            value={`MWK ${Number(
-              asset.purchasePrice || 0
-            ).toLocaleString()}`}
-          />
-        </div>
-
-        {/* CONDITION REQUEST SECTION */}
-
-<div style={requestCard}>
-  <h3>🔄 Request Condition Change</h3>
-
-  <p>
-    Current Condition:{" "}
-    <strong>
-      {asset.condition || "Not Specified"}
-    </strong>
-  </p>
-
-  <label>Requested Condition</label>
-
-  <select
-    value={requestedCondition}
-    onChange={(e) =>
-      setRequestedCondition(e.target.value)
-    }
-    style={input}
-  >
-    <option value="">
-      Select Condition
-    </option>
-
-    <option value="excellent">
-      Excellent
-    </option>
-
-    <option value="good">
-      Good
-    </option>
-
-    <option value="fair">
-      Fair
-    </option>
-
-    <option value="poor">
-      Poor
-    </option>
-
-    <option value="unserviceable">
-      Unserviceable (move to archive)
-    </option>
-  </select>
-
-  <label>Reason</label>
-
-  <textarea
-    rows="5"
-    style={input}
-    value={reason}
-    onChange={(e) =>
-      setReason(e.target.value)
-    }
-    placeholder="Explain why the condition should be changed..."
-  />
-
-  <button
-    onClick={handleRequest}
-    style={submitBtn}
-  >
-    Submit Request
-  </button>
-</div>
+            <Button onClick={handleRequest} className="w-full">
+              Submit request
+            </Button>
+          </div>
+        </Card>
       </div>
     </DashboardLayout>
   );
-};
-
-const Detail = ({ label, value }) => (
-  <div style={{ marginBottom: "10px" }}>
-    <strong>{label}:</strong> {value || "-"}
-  </div>
-);
-
-const container = {
-  padding: "24px",
-};
-
-const card = {
-  background: "#fff",
-  padding: "20px",
-  borderRadius: "10px",
-  border: "1px solid #ddd",
-  marginBottom: "30px",
-};
-
-const requestCard = {
-  background: "#fff",
-  padding: "20px",
-  borderRadius: "10px",
-  border: "1px solid #ddd",
-};
-
-const input = {
-  width: "100%",
-  padding: "10px",
-  marginTop: "8px",
-  marginBottom: "15px",
-};
-
-const submitBtn = {
-  background: "#007bff",
-  color: "#fff",
-  border: "none",
-  padding: "10px 20px",
-  borderRadius: "6px",
-  cursor: "pointer",
 };
 
 export default HODAssetDetailsPage;
